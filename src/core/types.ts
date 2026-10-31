@@ -19,7 +19,7 @@ export type MediaAsset = {
 
 export type DesignElement = {
   id: string;
-  kind: 'text' | 'rectangle' | 'ellipse';
+  kind: 'text' | 'rectangle' | 'ellipse' | 'image';
   x: number;
   y: number;
   width: number;
@@ -38,6 +38,9 @@ export type DesignElement = {
   strokeWidth?: number;
   opacity?: number;
   rotation?: number;
+  /** Yalnız görsel katmanı: medya kütüphanesindeki görsel varlığın kimliği ve kutuya sığdırma biçimi (varsayılan 'contain'). */
+  assetId?: string;
+  fit?: 'contain' | 'cover';
 };
 
 export type SubtitleCue = { id: string; start: number; end: number; text: string };

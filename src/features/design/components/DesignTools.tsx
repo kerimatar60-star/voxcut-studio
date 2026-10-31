@@ -1,17 +1,18 @@
 import {useEffect,useState} from 'react';
-import {Download,Layers,LayoutTemplate,Plus,Type} from 'lucide-react';
+import {Download,Image as ImageIcon,Layers,LayoutTemplate,Plus,Type} from 'lucide-react';
 import {DESIGN_PRESETS,MAX_CANVAS,MIN_CANVAS,presetIdFor} from '../../../core/designCanvas';
 import {EXPORT_FORMATS,EXPORT_SCALES,exportSize} from '../../../core/designExport';
 import type {ExportFormat} from '../../../core/designExport';
 import {TemplatePicker} from './TemplatePicker';
-import type {DesignElement,ProjectDocument,UpdateProject} from '../../../core/types';
+import type {DesignElement,MediaAsset,ProjectDocument,UpdateProject} from '../../../core/types';
 
 type Props={
   design:ProjectDocument['design'];update:UpdateProject;addElement:(kind:DesignElement['kind'])=>void;
   onCanvas:(width:number,height:number)=>void;onExport:(format:ExportFormat,scale:number)=>void;onTemplate:(id:string)=>void;
+  images:MediaAsset[];imageSources:Record<string,string>;onAddImage:()=>void;onUseImage:(asset:MediaAsset)=>void;
 };
 
-export function DesignTools({design,update,addElement,onCanvas,onExport,onTemplate}:Props){
+export function DesignTools({design,update,addElement,onCanvas,onExport,onTemplate,images,imageSources,onAddImage,onUseImage}:Props){
   const preset=presetIdFor(design.width,design.height);
   const [width,setWidth]=useState(String(design.width));
   const [height,setHeight]=useState(String(design.height));
@@ -28,6 +29,8 @@ export function DesignTools({design,update,addElement,onCanvas,onExport,onTempla
     <button className="tool-card" onClick={()=>addElement('text')}><span className="tool-icon purple"><Type size={20}/></span><span><strong>Metin ekle</strong><small>Başlık ve açıklama</small></span><Plus size={16}/></button>
     <button className="tool-card" onClick={()=>addElement('rectangle')}><span className="tool-icon pink"><LayoutTemplate size={20}/></span><span><strong>Dikdörtgen</strong><small>Arka plan ve kutular</small></span><Plus size={16}/></button>
     <button className="tool-card" onClick={()=>addElement('ellipse')}><span className="tool-icon cyan"><Layers size={20}/></span><span><strong>Elips</strong><small>Dekoratif şekiller</small></span><Plus size={16}/></button>
+    <button className="tool-card" onClick={onAddImage}><span className="tool-icon purple"><ImageIcon size={20}/></span><span><strong>Görsel ekle</strong><small>PNG, JPEG, WebP, GIF, BMP</small></span><Plus size={16}/></button>
+    {images.length>0&&<div className="image-chips" aria-label="Kütüphanedeki görseller">{images.map(a=><button key={a.id} type="button" className="image-chip" title={`${a.name} — tuvale ekle`} aria-label={`${a.name} görselini tuvale ekle`} onClick={()=>onUseImage(a)}>{imageSources[a.id]?<img src={imageSources[a.id]} alt=""/>:<ImageIcon size={16}/>}</button>)}</div>}
     <div className="divider"/>
     <span className="small-heading">ŞABLONLAR</span>
     <TemplatePicker onApply={onTemplate}/>

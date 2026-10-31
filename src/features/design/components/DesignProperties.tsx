@@ -17,9 +17,10 @@ const clamp=(v:number,min:number,max:number)=>Number.isFinite(v)?Math.min(max,Ma
 export function DesignProperties({element,changeElement,removeElement,onMove,onDuplicate,onAlign}:Props){
   if(!element)return <div className="empty-properties"><Layers size={31}/><strong>Katman seç</strong><p>Tuvaldeki bir katmana tıkla veya soldan yenisini ekle. Köşelerden boyutlandır, üstteki yuvarlak tutamaçtan döndür; ok tuşları kaydırır, Delete siler.</p></div>;
   const isText=element.kind==='text';
+  const isImage=element.kind==='image';
   const opacity=Math.round((element.opacity??1)*100);
   return <div className="property-body">
-    <label className="small-heading">SEÇİLİ KATMAN</label><div className="selected-title"><Layers size={17}/>{isText?'Metin katmanı':element.kind==='ellipse'?'Elips':'Dikdörtgen'}</div>
+    <label className="small-heading">SEÇİLİ KATMAN</label><div className="selected-title"><Layers size={17}/>{isText?'Metin katmanı':isImage?'Görsel katmanı':element.kind==='ellipse'?'Elips':'Dikdörtgen'}</div>
     {isText&&<div className="field"><label>Metin içeriği</label><textarea rows={4} value={element.text} onChange={e=>changeElement({text:e.target.value})}/></div>}
     {isText&&<>
       <span className="small-heading">YAZI</span>
@@ -38,6 +39,7 @@ export function DesignProperties({element,changeElement,removeElement,onMove,onD
         <div className="field"><label>Kontur (px)</label><input type="number" min={0} max={200} value={element.strokeWidth??0} onChange={e=>changeElement({strokeWidth:clamp(Number(e.target.value),0,200)})}/></div>
       </div>
     </>}
+    {isImage&&<div className="field"><label htmlFor="el-fit">Kutuya sığdırma</label><select id="el-fit" value={element.fit??'contain'} onChange={e=>changeElement({fit:e.target.value==='cover'?'cover':'contain'})}><option value="contain">Tamamı görünsün (sığdır)</option><option value="cover">Kutuyu doldur (kırp)</option></select></div>}
     <span className="small-heading">KONUM VE BOYUT</span>
     <div className="property-grid"><div className="field"><label>X (%)</label><input type="number" value={Math.round(element.x)} onChange={e=>changeElement({x:Number(e.target.value)})}/></div><div className="field"><label>Y (%)</label><input type="number" value={Math.round(element.y)} onChange={e=>changeElement({y:Number(e.target.value)})}/></div></div>
     <div className="property-grid"><div className="field"><label>Genişlik (%)</label><input type="number" value={Math.round(element.width*10)/10} onChange={e=>changeElement({width:Number(e.target.value)})}/></div><div className="field"><label>Yükseklik (%)</label><input type="number" value={Math.round(element.height*10)/10} onChange={e=>changeElement({height:Number(e.target.value)})}/></div></div>
@@ -46,7 +48,7 @@ export function DesignProperties({element,changeElement,removeElement,onMove,onD
       <button className="btn btn-dark" title="Döndürmeyi sıfırla" aria-label="Döndürmeyi sıfırla" disabled={!element.rotation} onClick={()=>changeElement({rotation:0})}><RotateCcw size={15}/> Sıfırla</button>
     </div>
     <div className="field"><label htmlFor="el-opacity">Opaklık: {opacity}%</label><input id="el-opacity" type="range" min={5} max={100} step={1} value={opacity} onChange={e=>changeElement({opacity:clamp(Number(e.target.value),5,100)/100})}/></div>
-    <div className="field"><label>{isText?'Metin rengi':'Şekil rengi'}</label><input type="color" value={isText?element.color:element.background} onChange={e=>changeElement(isText?{color:e.target.value}:{background:e.target.value})}/></div>
+    {!isImage&&<div className="field"><label>{isText?'Metin rengi':'Şekil rengi'}</label><input type="color" value={isText?element.color:element.background} onChange={e=>changeElement(isText?{color:e.target.value}:{background:e.target.value})}/></div>}
     <span className="small-heading">TUVALE HİZALA</span>
     <div className="property-grid">{ALIGNS.map(([how,label])=><button key={how} className="btn btn-dark" onClick={()=>onAlign(how)}>{label}</button>)}</div>
     <span className="small-heading">KATMAN SIRASI</span>

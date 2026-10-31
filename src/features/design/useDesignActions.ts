@@ -1,5 +1,5 @@
 import {duplicateLayer,moveLayer,resizeCanvas} from '../../core/designCanvas';
-import {alignBox} from '../../core/designGeometry';
+import {alignBox,initialImageBox} from '../../core/designGeometry';
 import type {AlignHow} from '../../core/designGeometry';
 import type {LayerMove} from '../../core/designCanvas';
 import {instantiateTemplate,templateById} from '../../core/designTemplates';
@@ -41,5 +41,15 @@ export function useDesignActions(update:UpdateProject,selected:string|null,setSe
     update(p=>({...p,design:next}));
     setSelected(null);
   };
-  return {changeElement,addElement,removeElement,setCanvas,moveSelected,duplicateSelected,nudgeSelected,alignSelected,applyTemplate};
+  /** Medya kütüphanesindeki bir görseli katman olarak ekler; en-boy oranı korunur ve tuvale ortalanır. */
+  const addImageLayer=(assetId:string,imageWidth:number,imageHeight:number)=>{
+    const id=newId();
+    update(p=>{
+      const box=initialImageBox(imageWidth,imageHeight,p.design.width,p.design.height);
+      const el:DesignElement={...makeElement('rectangle'),id,kind:'image',text:'',assetId,...box};
+      return {...p,design:{...p.design,elements:[...p.design.elements,el]}};
+    });
+    setSelected(id);
+  };
+  return {addImageLayer,changeElement,addElement,removeElement,setCanvas,moveSelected,duplicateSelected,nudgeSelected,alignSelected,applyTemplate};
 }

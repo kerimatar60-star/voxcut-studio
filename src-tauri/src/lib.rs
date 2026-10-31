@@ -100,7 +100,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
-            trim_video, audio_mix::mix_video_audio, audio_mix::inspect_mix_media, project_io::read_project_file, project_io::write_project_file, subtitle_burn::burn_subtitles, library_db::recent_projects_list, library_db::recent_projects_touch, library_db::recent_projects_forget, media_fingerprint::file_fingerprint, media_fingerprint::find_moved_media, media_access::authorize_media, package_io::write_package, package_io::read_package, package_io::list_backups, package_io::restore_backup, package_media::collect_media, export_io::save_export_file
+            trim_video, audio_mix::mix_video_audio, audio_mix::inspect_mix_media, project_io::read_project_file, project_io::write_project_file, subtitle_burn::burn_subtitles, library_db::recent_projects_list, library_db::recent_projects_touch, library_db::recent_projects_forget, media_fingerprint::file_fingerprint, media_fingerprint::find_moved_media, media_access::authorize_media, media_access::read_image_bytes, package_io::write_package, package_io::read_package, package_io::list_backups, package_io::restore_backup, package_media::collect_media, export_io::save_export_file
         ])
         .run(tauri::generate_context!())
         .expect("VoxCut Studio baslatilamadi");

@@ -101,3 +101,32 @@ describe('metin sarma ve yazı tipleri', () => {
     expect(fontStack(undefined)).toBe('"Arial", sans-serif');
   });
 });
+
+import { fitRect, initialImageBox } from './designGeometry';
+
+describe('görsel sığdırma', () => {
+  it('contain: tamamı görünür ve ortalanır (yatay görsel dikey kutuda üst-alt boşluk)', () => {
+    const r = fitRect(200, 100, 100, 100, 'contain');
+    expect(r).toEqual({ x: 0, y: 25, width: 100, height: 50 });
+  });
+  it('cover: kutuyu doldurur, taşan kısım eşit kırpılır', () => {
+    const r = fitRect(200, 100, 100, 100, 'cover');
+    expect(r).toEqual({ x: -50, y: 0, width: 200, height: 100 });
+  });
+  it('kutu ile aynı oranda görsel her iki modda da tam oturur', () => {
+    for (const fit of ['contain', 'cover'] as const) expect(fitRect(400, 200, 200, 100, fit)).toEqual({ x: 0, y: 0, width: 200, height: 100 });
+  });
+  it('geçersiz boyutlarda çökmez (kutuyu doldurur)', () => {
+    expect(fitRect(0, 0, 100, 50, 'contain')).toEqual({ x: 0, y: 0, width: 100, height: 50 });
+    expect(fitRect(10, 10, 0, 50, 'cover')).toEqual({ x: 0, y: 0, width: 0, height: 50 });
+  });
+  it('initialImageBox: oran korunur, ortalanır, tuvalin sınırlarını aşmaz', () => {
+    const wide = initialImageBox(2000, 1000, 1280, 720);
+    expect(wide.width).toBeCloseTo(50); expect((wide.width / 100) * 1280 / ((wide.height / 100) * 720)).toBeCloseTo(2);
+    expect(wide.x).toBeCloseTo((100 - wide.width) / 2); expect(wide.y).toBeCloseTo((100 - wide.height) / 2);
+    const tall = initialImageBox(500, 2000, 1280, 720);
+    expect(tall.height).toBeCloseTo(60); expect((tall.width / 100) * 1280 / ((tall.height / 100) * 720)).toBeCloseTo(0.25);
+    const bad = initialImageBox(0, 0, 1000, 1000);
+    expect(bad.width).toBeCloseTo(50); expect(bad.height).toBeCloseTo(50);
+  });
+});

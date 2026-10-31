@@ -39,7 +39,7 @@ export function parseProject(input: unknown): ProjectDocument {
   const elements:DesignElement[] = design.elements.map((el:unknown) => {
     if (!el || typeof el !== 'object') throw new Error('Geçersiz katman.');
     const e = el as Record<string,unknown>;
-    if (!['text','rectangle','ellipse'].includes(String(e.kind))) throw new Error('Desteklenmeyen katman.');
+    if (!['text','rectangle','ellipse','image'].includes(String(e.kind))) throw new Error('Desteklenmeyen katman.');
     if (![e.x,e.y,e.width,e.height,e.fontSize,e.weight].every(v => typeof v==='number' && Number.isFinite(v))) throw new Error('Katman ölçüleri geçersiz.');
     const num=(v:unknown,min:number,max:number)=>typeof v==='number'&&Number.isFinite(v)?Math.min(max,Math.max(min,v)):undefined;
     const opacity=num(e.opacity,0.05,1),rotation=num(e.rotation,-360,360),strokeWidth=num(e.strokeWidth,0,200);
@@ -52,6 +52,8 @@ export function parseProject(input: unknown): ProjectDocument {
       ...(strokeWidth!==undefined&&strokeWidth>0?{strokeWidth}:{}),
       ...(opacity!==undefined&&opacity<1?{opacity}:{}),
       ...(rotation!==undefined&&rotation!==0?{rotation}:{}),
+      ...(e.kind==='image'&&typeof e.assetId==='string'&&e.assetId?{assetId:e.assetId.slice(0,120)}:{}),
+      ...(e.kind==='image'&&e.fit==='cover'?{fit:'cover' as const}:{}),
     };
     return { id:String(e.id).slice(0,120), kind:e.kind as DesignElement['kind'], x:Number(e.x), y:Number(e.y), width:Number(e.width), height:Number(e.height), text:String(e.text ?? '').slice(0,3000), color:String(e.color ?? '#ffffff').slice(0,80), background:String(e.background ?? '#7355e9').slice(0,80),fontSize:Number(e.fontSize),weight:Number(e.weight),...extras};
   });

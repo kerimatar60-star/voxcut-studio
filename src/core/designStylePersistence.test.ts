@@ -39,3 +39,22 @@ describe('katman stili kalıcılığı', () => {
     for (const key of ['fontFamily', 'align', 'strokeColor', 'opacity', 'rotation', 'italic', 'shadow']) expect(key in el).toBe(false);
   });
 });
+
+describe('görsel katmanı kalıcılığı', () => {
+  const imageLayer = (extra: Record<string, unknown>) => {
+    const doc = { ...exampleProject(), design: { ...exampleProject().design, elements: [{ ...makeElement('rectangle'), id: 'img1', kind: 'image', ...extra }] } };
+    return parseProject(JSON.parse(JSON.stringify(doc))).design.elements[0] as DesignElement;
+  };
+  it('assetId ve fit kaydet → aç gidiş-dönüşünde korunur; yalnız görsel katmanında', () => {
+    expect(imageLayer({ assetId: 'abc-123', fit: 'cover' })).toMatchObject({ kind: 'image', assetId: 'abc-123', fit: 'cover' });
+    const rect = parseProject(JSON.parse(JSON.stringify({ ...exampleProject(), design: { ...exampleProject().design, elements: [{ ...makeElement('rectangle'), id: 'r', assetId: 'x', fit: 'cover' }] } }))).design.elements[0] as unknown as Record<string, unknown>;
+    expect('assetId' in rect).toBe(false);
+    expect('fit' in rect).toBe(false);
+  });
+  it("varsayılan fit ('contain') kaydedilmez; bozuk değerler atılır; kimlik kırpılır", () => {
+    const el = imageLayer({ assetId: 'a'.repeat(500), fit: 'stretch' }) as unknown as Record<string, unknown>;
+    expect((el.assetId as string).length).toBe(120);
+    expect('fit' in el).toBe(false);
+    expect('assetId' in (imageLayer({ assetId: 42 }) as unknown as Record<string, unknown>)).toBe(false);
+  });
+});

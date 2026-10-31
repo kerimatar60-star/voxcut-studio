@@ -1,4 +1,4 @@
-import {useCallback,useState} from 'react';
+import {useCallback,useRef,useState} from 'react';
 import {isTauri} from '@tauri-apps/api/core';
 import {BookOpen,Check,Mic2,Scissors,Settings2,ShieldCheck,Video,WandSparkles} from 'lucide-react';
 import {exampleProject} from './core/project';
@@ -6,7 +6,8 @@ import {exportDesign} from './core/designExport';
 import type {ExportFormat} from './core/designExport';
 import {emptyAudioMix} from './core/audioMixModel';
 import type {AudioMixState} from './core/audioMixModel';
-import type {ProjectDocument,UpdateProject,Workspace} from './core/types';
+import type {MediaAsset,ProjectDocument,UpdateProject,Workspace} from './core/types';
+import {measureImage} from './core/imageSize';
 import {tabs} from './shared/workspaces';
 import {AudioMixPanel} from './features/audio/components/AudioMixPanel';
 import {DesignProperties} from './features/design/components/DesignProperties';
@@ -54,7 +55,26 @@ export default function App(){
   const element=project.design.elements.find(e=>e.id===selectedElement);
   const asset=project.assets.find(a=>a.id===media.selectedAsset);
   const src=media.selectedAsset?media.urls[media.selectedAsset]:undefined;
-  const exportImage=(format:ExportFormat,scale:number)=>{exportDesign(project,{format,scale}).then(info=>{if(info)setNotice(`Kaydedildi: ${info}`);}).catch(err=>setNotice(err instanceof Error?err.message:String(err)));};
+  const designImageInputRef=useRef<HTMLInputElement>(null);
+  /** Kütüphanedeki bir görseli tasarıma katman olarak ekler (oran korunur, tuvale ortalanır). */
+  const useImageAsset=async(asset:MediaAsset)=>{
+    try{
+      const url=media.imageUrlFor(asset.id)??media.imageSources[asset.id];
+      if(!url){setNotice('Görsel okunamadı. Medya sekmesinden dosyayı yeniden bağlamayı dene.');return;}
+      const {width,height}=await measureImage(url);
+      design.addImageLayer(asset.id,width,height);
+    }catch{setNotice('Görsel açılamadı; dosya bozuk olabilir.');}
+  };
+  const addImageToDesign=async()=>{
+    if(isTauri()){const asset=await media.pickImage();if(asset)await useImageAsset(asset);}
+    else designImageInputRef.current?.click();
+  };
+  const onDesignImageFiles=async(files:FileList|null)=>{
+    const added=media.addMedia(files).find(a=>a.kind==='image');
+    if(designImageInputRef.current)designImageInputRef.current.value='';
+    if(added)await useImageAsset(added);
+  };
+  const exportImage=(format:ExportFormat,scale:number)=>{exportDesign(project,{format,scale,imageSources:media.imageSources}).then(info=>{if(info)setNotice(`Kaydedildi: ${info}`);}).catch(err=>setNotice(err instanceof Error?err.message:String(err)));};
   const exportCurrent=()=>workspace==='design'?exportImage('png',1):workspace==='subtitles'?subs.exportSrt():setNotice(workspace==='video'?'MP4 kesmek için sağdaki Gerçek MP4 kesme panelini kullan.':'Ses miksli MP4 için sağdaki A26 ses panelini kullan. MP3 çıktısı henüz yok.');
   const pickMedia=()=>isTauri()?void media.addFromDialog():media.mediaInputRef.current?.click();
 
@@ -78,7 +98,7 @@ export default function App(){
       <div className="workspace">
         <section className="panel left-panel">
           <div className="panel-heading"><div><span className="eyebrow">ÇALIŞMA ALANI</span><h2>{tabs.find(t=>t.id===workspace)?.label} Stüdyosu</h2></div><Settings2 size={18} className="muted-icon"/></div>
-          {workspace==='design'&&<DesignTools design={project.design} update={update} addElement={design.addElement} onCanvas={design.setCanvas} onExport={exportImage} onTemplate={id=>{design.applyTemplate(id);setNotice('Şablon uygulandı. Beğenmezsen üstteki Geri al ile önceki tasarıma dönebilirsin.');}}/>}
+          {workspace==='design'&&<DesignTools design={project.design} update={update} addElement={design.addElement} onCanvas={design.setCanvas} onExport={exportImage} images={project.assets.filter(a=>a.kind==='image')} imageSources={media.imageSources} onAddImage={()=>void addImageToDesign()} onUseImage={a=>void useImageAsset(a)} onTemplate={id=>{design.applyTemplate(id);setNotice('Şablon uygulandı. Beğenmezsen üstteki Geri al ile önceki tasarıma dönebilirsin.');}}/>}
           {(workspace==='video'||workspace==='audio')&&<MediaLibrary library={media.library} filter={media.filter} setFilter={media.setFilter} selectedAsset={media.selectedAsset} setSelectedAsset={media.setSelectedAsset} urls={media.urls} problems={media.problems} busy={media.busy} onPickFile={pickMedia} removeAsset={media.removeAsset} onRelink={id=>void media.relinkAsset(id)} onRelinkFolder={()=>void media.relinkFromFolder()}/>}
           {workspace==='subtitles'&&<SubtitleTools cues={project.subtitles} onAdd={subs.addCue} onExportSrt={subs.exportSrt} onExportVtt={subs.exportVtt} onImportClick={()=>subs.subtitleInputRef.current?.click()}/>}
           <div className="panel-bottom"><ShieldCheck size={16}/><div><strong>Önce yerel, sonra bulut</strong><span>Dosyalar izinsiz yüklenmez.</span></div></div>
@@ -88,7 +108,7 @@ export default function App(){
           <div className="editor-header"><div className="breadcrumb">PROJE / <span>{tabs.find(t=>t.id===workspace)?.label.toUpperCase()}</span></div><div className="editor-header-right"><span className="status-online"/> Çalışma alanı hazır <span className="sep">•</span> <span className="resolution">{workspace==='design'?`${project.design.width} × ${project.design.height}`:'Yerel ön izleme'}</span></div></div>
           <div className="preview-area">
             {workspace==='design'
-              ?<DesignStage design={project.design} selectedElement={selectedElement} onSelect={setSelectedElement} update={update} onDelete={design.removeElement} onNudge={design.nudgeSelected}/>
+              ?<DesignStage design={project.design} selectedElement={selectedElement} onSelect={setSelectedElement} update={update} onDelete={design.removeElement} onNudge={design.nudgeSelected} imageSources={media.imageSources}/>
               :<MediaPreview workspace={workspace} asset={asset} src={src} cues={project.subtitles} currentTime={currentTime} onTime={setCurrentTime} videoVolume={videoVolume} audioVolume={audioVolume} onPickFile={pickMedia}/>}
           </div>
           <Timeline workspace={workspace} project={project} selectedElement={selectedElement} onSelectElement={setSelectedElement} onSelectAsset={media.setSelectedAsset} onOpenSubtitles={()=>setWorkspace('subtitles')}/>
@@ -107,6 +127,7 @@ export default function App(){
       </div>
       <footer className="statusbar"><span><span className="status-online"/> Yerel oturum</span><span><BookOpen size={13}/> Kılavuz: README.md</span><span className="footer-right"><Mic2 size={13}/> Ses AI planlandı <span className="sep">•</span> <Scissors size={13}/> MP4 kesme modülü hazır</span></footer>
     </main>
+    <input ref={designImageInputRef} type="file" accept="image/*" hidden onChange={e=>void onDesignImageFiles(e.target.files)}/>
     <input ref={media.mediaInputRef} type="file" accept="video/*,audio/*,image/*" multiple hidden onChange={e=>media.addMedia(e.target.files)}/>
     <input ref={subs.subtitleInputRef} type="file" accept=".srt,.vtt,text/vtt,application/x-subrip" hidden onChange={e=>void subs.importSubtitles(e.target.files)}/>
     <input ref={files.projectInputRef} type="file" accept=".json,.voxcut.json,application/json" hidden onChange={files.importProject}/>

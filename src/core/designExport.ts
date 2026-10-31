@@ -2,6 +2,7 @@ import type { DesignElement, ProjectDocument } from './types';
 import { fontStack, LINE_HEIGHT, wrapText } from './designText';
 import { saveExport } from './saveFile';
 import { MAX_CANVAS } from './designCanvas';
+import { fitRect } from './designGeometry';
 
 export type ExportFormat = 'png' | 'jpeg' | 'webp';
 export const EXPORT_FORMATS: { id: ExportFormat; label: string; mime: string; ext: string }[] = [
@@ -28,13 +29,23 @@ export function designFileName(projectName: string, format: ExportFormat): strin
 }
 
 /** Tek katmanı çizer: dönme (merkez etrafında), opaklık, yazı stili ve kutuya kırpma önizleme (CSS) ile aynı kurallara uyar. */
-function drawElement(ctx: CanvasRenderingContext2D, el: DesignElement, canvasW: number, canvasH: number) {
+export type LoadedImages = Record<string, HTMLImageElement>;
+
+function drawElement(ctx: CanvasRenderingContext2D, el: DesignElement, canvasW: number, canvasH: number, images: LoadedImages) {
   const x = el.x / 100 * canvasW, y = el.y / 100 * canvasH, w = el.width / 100 * canvasW, h = el.height / 100 * canvasH;
   ctx.save();
   ctx.globalAlpha = el.opacity ?? 1;
   if (el.rotation) { ctx.translate(x + w / 2, y + h / 2); ctx.rotate(el.rotation * Math.PI / 180); ctx.translate(-(x + w / 2), -(y + h / 2)); }
   if (el.kind === 'rectangle') { ctx.fillStyle = el.background; ctx.fillRect(x, y, w, h); }
   else if (el.kind === 'ellipse') { ctx.fillStyle = el.background; ctx.beginPath(); ctx.ellipse(x + w / 2, y + h / 2, Math.max(1, w / 2), Math.max(1, h / 2), 0, 0, Math.PI * 2); ctx.fill(); }
+  else if (el.kind === 'image') {
+    ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+    const img = el.assetId ? images[el.assetId] : undefined;
+    if (img) {
+      const r = fitRect(img.naturalWidth, img.naturalHeight, w, h, el.fit ?? 'contain');
+      ctx.drawImage(img, x + r.x, y + r.y, r.width, r.height);
+    } else { ctx.fillStyle = '#3a3d52'; ctx.fillRect(x, y, w, h); } // görsel yüklenemediyse yer tutucu (sahnedeki yer tutucuyla aynı mantık)
+  }
   else {
     ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
     const size = el.fontSize, align = el.align ?? 'left';
@@ -57,7 +68,7 @@ function drawElement(ctx: CanvasRenderingContext2D, el: DesignElement, canvasW: 
 }
 
 /** Tasarımı verilen ölçekle bir tuvale çizer (tüm koordinatlar mantıksal piksel, çıktı ölçeklenir). */
-export function renderDesign(project: ProjectDocument, scale: number): HTMLCanvasElement {
+export function renderDesign(project: ProjectDocument, scale: number, images: LoadedImages = {}): HTMLCanvasElement {
   const { width, height, background, elements } = project.design;
   const size = exportSize(width, height, scale);
   const canvas = document.createElement('canvas');
@@ -66,14 +77,29 @@ export function renderDesign(project: ProjectDocument, scale: number): HTMLCanva
   if (!ctx) throw new Error('Tuval oluşturulamadı.');
   ctx.scale(size.width / width, size.height / height);
   ctx.fillStyle = background; ctx.fillRect(0, 0, width, height);
-  for (const element of elements) drawElement(ctx, element, width, height);
+  for (const element of elements) drawElement(ctx, element, width, height, images);
   return canvas;
 }
 
 /** PNG / JPEG / WebP olarak indirir; kaydedilen dosya adını ve boyutunu döndürür. Tarayıcı biçimi desteklemezse hata verir. */
-export function exportDesign(project: ProjectDocument, options: { format: ExportFormat; scale: number }): Promise<string> {
+/** Tasarımdaki görsel katmanlarının kaynaklarını yükler; yüklenemeyenler atlanır (o katman yer tutucu çizilir). */
+export async function loadDesignImages(project: ProjectDocument, sources: Record<string, string>): Promise<LoadedImages> {
+  const ids = [...new Set(project.design.elements.filter(e => e.kind === 'image' && e.assetId).map(e => e.assetId as string))];
+  const loaded: LoadedImages = {};
+  await Promise.all(ids.map(async id => {
+    const src = sources[id];
+    if (!src) return;
+    const img = new Image();
+    img.src = src;
+    try { await img.decode(); if (img.naturalWidth > 0) loaded[id] = img; } catch { /* bozuk görsel: yer tutucu */ }
+  }));
+  return loaded;
+}
+
+export async function exportDesign(project: ProjectDocument, options: { format: ExportFormat; scale: number; imageSources?: Record<string, string> }): Promise<string> {
   const spec = EXPORT_FORMATS.find(f => f.id === options.format) ?? EXPORT_FORMATS[0];
-  const canvas = renderDesign(project, options.scale);
+  const images = await loadDesignImages(project, options.imageSources ?? {});
+  const canvas = renderDesign(project, options.scale, images);
   return new Promise((resolve, reject) => {
     canvas.toBlob(blob => {
       if (!blob) { reject(new Error('Dosya oluşturulamadı.')); return; }

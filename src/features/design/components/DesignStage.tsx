@@ -7,11 +7,11 @@ import type {DesignElement,ProjectDocument,UpdateProject} from '../../../core/ty
 import {elementStyle} from '../elementStyle';
 
 type Drag={mode:'move'|'resize'|'rotate';id:string;startX:number;startY:number;origin:Box;handle?:Handle};
-type Props={design:ProjectDocument['design'];selectedElement:string|null;onSelect:(id:string|null)=>void;update:UpdateProject;onDelete:()=>void;onNudge:(dx:number,dy:number)=>void};
+type Props={design:ProjectDocument['design'];selectedElement:string|null;onSelect:(id:string|null)=>void;update:UpdateProject;onDelete:()=>void;onNudge:(dx:number,dy:number)=>void;imageSources:Record<string,string>};
 
 const HANDLES:Handle[]=['nw','ne','sw','se'];
 
-export function DesignStage({design,selectedElement,onSelect,update,onDelete,onNudge}:Props){
+export function DesignStage({design,selectedElement,onSelect,update,onDelete,onNudge,imageSources}:Props){
   const stageRef=useRef<HTMLDivElement>(null);
   const dragRef=useRef<Drag|null>(null);
   const selected=design.elements.find(e=>e.id===selectedElement);
@@ -65,7 +65,7 @@ export function DesignStage({design,selectedElement,onSelect,update,onDelete,onN
   return <>
     <div className="board-tools"><span className="chip"><LayoutTemplate size={14}/> Tasarım tuvali</span><span className="chip pale">Sürükle, köşeden boyutlandır, üstten döndür</span></div>
     <div className="stage-fit"><div className="design-frame" style={frameStyle}><div ref={stageRef} className="design-stage" style={{background:design.background}} onClick={()=>onSelect(null)}>
-      {design.elements.map(el=><div key={el.id} data-element={el.id} className={`design-element ${el.kind} ${el.id===selectedElement?'selected':''}`} onClick={e=>e.stopPropagation()} onPointerDown={e=>begin(e,el,'move')} onPointerMove={onPointerMove} onPointerUp={end} onPointerCancel={end} style={elementStyle(el,design)}>{el.kind==='text'?el.text:null}</div>)}
+      {design.elements.map(el=><div key={el.id} data-element={el.id} className={`design-element ${el.kind} ${el.id===selectedElement?'selected':''}`} onClick={e=>e.stopPropagation()} onPointerDown={e=>begin(e,el,'move')} onPointerMove={onPointerMove} onPointerUp={end} onPointerCancel={end} style={elementStyle(el,design)}>{el.kind==='text'?el.text:el.kind==='image'?(el.assetId&&imageSources[el.assetId]?<img src={imageSources[el.assetId]} alt="" draggable={false} style={{width:'100%',height:'100%',objectFit:el.fit??'contain',display:'block',pointerEvents:'none'}}/>:<span className="image-missing">Görsel bulunamadı</span>):null}</div>)}
       {selected&&<div className="design-handles" style={{left:`${selected.x}%`,top:`${selected.y}%`,width:`${selected.width}%`,height:`${selected.height}%`,transform:selected.rotation?`rotate(${selected.rotation}deg)`:undefined}}>
         {HANDLES.map(h=><div key={h} data-handle={h} className={`design-handle ${h}`} onClick={e=>e.stopPropagation()} onPointerDown={e=>begin(e,selected,'resize',h)} onPointerMove={onPointerMove} onPointerUp={end} onPointerCancel={end}/>)}
         <div className="design-handle-stem"/>
