@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { baseName, MAX_MIX_TRACKS, MIX_FORMATS, mixFormatSpec, mixRequest, printChanged, reconcileMix, type MixFormat, type AudioMixState, type MixTrack, type ProbeResult } from '../../../core/audioMixModel';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
+import { Waveform } from './Waveform';
 
 const VIDEO_EXT = ['mp4', 'mov', 'mkv', 'webm', 'avi', 'm4v'];
 const AUDIO_EXT = ['wav', 'mp3', 'm4a', 'aac', 'flac', 'ogg', 'opus'];
@@ -201,10 +202,12 @@ export function AudioMixPanel({ mix, onChange, loadToken }: Props) {
       <button type="button" className="btn btn-dark wide" onClick={pickVideo}>{mix.videoPath ? 'Videoyu değiştir' : '1 · Miks için video seç'}</button>
       <p className="vc-trim-name" title={mix.videoPath}>{baseName(mix.videoPath)}</p>
       {mix.videoDuration > 0 && <p className="vc-trim-hint">Video: {mix.videoDuration.toFixed(2)} sn{mix.hasOriginal ? '' : ' · Orijinal ses yok'}</p>}
+      {mix.videoPath && mix.hasOriginal && !issues.video && <Waveform path={mix.videoPath} label="Orijinal ses" duration={mix.videoDuration} start={0} end={mix.videoDuration} />}
       <label className="field">Orijinal ses: {Math.round(mix.gain * 100)}%<input aria-label="Orijinal ses seviyesi" type="range" min="0" max="2" step="0.01" value={mix.gain} onChange={e => onChange(m => ({ ...m, gain: Number(e.target.value) }))}/></label>
       <div className="property-grid"><label><input type="checkbox" checked={mix.mute} onChange={e => onChange(m => ({ ...m, mute: e.target.checked }))}/> Sustur</label><label><input type="checkbox" checked={mix.solo} onChange={e => onChange(m => ({ ...m, solo: e.target.checked }))}/> Solo</label></div>
       {tracks.map((t, index) => <fieldset key={t.id} className={issues[t.id] ? 'vc-track-bad' : ''} style={{ margin: '16px 0', border: '1px solid #555', borderRadius: 8, minWidth: 0 }}>
         <legend>Kanal {index + 1} · {t.sourceDuration.toFixed(2)} sn</legend><p className="vc-trim-name" title={t.path}>{baseName(t.path)}</p>
+        {!issues[t.id] && <Waveform path={t.path} label={`Kanal ${index + 1}`} duration={t.sourceDuration} start={t.sourceIn} end={t.sourceIn + t.length} />}
         <label className="field">Seviye: {Math.round(t.gain * 100)}%<input aria-label={`Kanal ${index + 1} seviye`} type="range" min="0" max="2" step="0.01" value={t.gain} onChange={e => update(t.id, { gain: Number(e.target.value) })}/></label>
         <label className="field">Pan: {t.pan === 0 ? 'Orta' : t.pan < 0 ? 'Sol' : 'Sağ'}<input aria-label={`Kanal ${index + 1} pan`} type="range" min="-1" max="1" step="0.05" value={t.pan} onChange={e => update(t.id, { pan: Number(e.target.value) })}/></label>
         <div className="property-grid">{([['start', 'Videoda başlangıç'], ['sourceIn', 'Seste başlangıç'], ['length', 'Kullanılacak süre'], ['fadeIn', 'Fade giriş'], ['fadeOut', 'Fade çıkış']] as const).map(([key, label]) => <label className="field" key={key}>{label} (sn)<input aria-label={`Kanal ${index + 1} ${label}`} type="number" min={key === 'length' ? 0.01 : 0} step="0.1" value={t[key]} onChange={e => update(t.id, { [key]: Number(e.target.value) })}/></label>)}</div>
