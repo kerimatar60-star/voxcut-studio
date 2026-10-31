@@ -83,3 +83,7 @@
 .vc-wave{margin:4px 0 8px;border-radius:6px;background:#12141c;border:1px solid #2c2f42}
 .vc-denoise audio{width:100%;margin-top:6px}
 .vc-ab{display:flex;flex-direction:column;gap:6px}
+.vc-adjust{border:1px solid #2c2f42;border-radius:6px;padding:4px 8px;font-size:11px}
+.vc-adjust summary{cursor:pointer;color:#c9cce0}
+.vc-adjust .field{margin:6px 0}
+.vc-transition{display:flex;flex-direction:column;gap:6px;border-top:1px dashed #3a3d52;padding-top:6px}

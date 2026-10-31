@@ -6,7 +6,7 @@ const MAX_SRT_BYTES: usize = 1_000_000;
 
 /// Altyazı görünümü (hepsi beyaz liste ile doğrulanır): yazı tipi, kalın, kontur kalınlığı ve yarı saydam arka plan kutusu.
 #[derive(Debug, Clone)]
-struct Look { font: String, bold: bool, outline: f64, boxed: bool }
+pub(crate) struct Look { pub(crate) font: String, pub(crate) bold: bool, pub(crate) outline: f64, pub(crate) boxed: bool }
 
 impl Default for Look {
     fn default() -> Self { Look { font: "Arial".into(), bold: false, outline: 1.5, boxed: false } }
@@ -17,7 +17,7 @@ const FONTS: [&str; 9] = ["Arial", "Segoe UI", "Verdana", "Tahoma", "Trebuchet M
 
 /// Yalnız beyaz listedeki değerlerden libass stili üretir; arayüzden ham stil metni kabul edilmez.
 /// `size_percent`: yazı boyutu, video yüksekliğinin yüzdesi. libass SRT için 288 birimlik sanal yükseklik kullanır.
-fn force_style(size_percent: f64, position: &str, color: &str, look: &Look) -> Result<String, String> {
+pub(crate) fn force_style(size_percent: f64, position: &str, color: &str, look: &Look) -> Result<String, String> {
     if !size_percent.is_finite() || !(2.0..=12.0).contains(&size_percent) { return Err("Yazı boyutu %2 ile %12 arasında olmalı.".into()); }
     let alignment = match position { "bottom" => 2, "middle" => 5, "top" => 8, _ => return Err("Geçersiz altyazı konumu.".into()) };
     let primary = match color { "white" => "&H00FFFFFF", "yellow" => "&H0000FFFF", "cyan" => "&H00FFFF00", "green" => "&H0000FF00", _ => return Err("Geçersiz altyazı rengi.".into()) };
@@ -32,7 +32,7 @@ fn force_style(size_percent: f64, position: &str, color: &str, look: &Look) -> R
 }
 
 /// SRT içeriğini doğrular ve ipucu olarak cue sayısını döndürür.
-fn validate_srt(srt: &str) -> Result<usize, String> {
+pub(crate) fn validate_srt(srt: &str) -> Result<usize, String> {
     if srt.len() > MAX_SRT_BYTES { return Err("Altyazı verisi çok büyük.".into()); }
     if srt.contains('\0') { return Err("Altyazı verisi geçersiz karakter içeriyor.".into()); }
     let cues = srt.lines().filter(|line| line.contains(" --> ")).count();

@@ -106,3 +106,72 @@ describe('reconcileTimeline (proje açılışı)', () => {
     expect(JSON.stringify(t)).toBe(before);
   });
 });
+
+import { DEFAULT_ADJUST, adjustsRequest, maxTransitionFor, outputDuration, setAdjust, setTransition, transitionsRequest, TRANSITIONS } from './timelineModel';
+
+describe('geçişler', () => {
+  const three = () => [clip('a', { in: 0, out: 4 }), clip('b', { in: 0, out: 2 }), clip('c', { in: 0, out: 6 })];
+  it('geçiş süresi komşu kliplerin kısasının yarısıyla sınırlanır ve çıktı süresi örtüşme kadar kısalır', () => {
+    expect(maxTransitionFor(three(), 0)).toBe(1);
+    expect(maxTransitionFor(three(), 1)).toBe(1);
+    expect(maxTransitionFor(three(), 2)).toBe(0);
+    let clips = setTransition(three(), 'a', 'fade', 9);
+    expect(clips[0].transition).toEqual({ kind: 'fade', duration: 1 });
+    clips = setTransition(clips, 'b', 'dissolve', 0.5);
+    expect(outputDuration(clips)).toBeCloseTo(12 - 1 - 0.5);
+    expect(outputDuration(three())).toBe(12);
+  });
+  it('kesme geçişi kaldırır; son klibe geçiş eklenmez; girdi değişmez; bilinmeyen id aynı diziyi döndürür', () => {
+    const base = three(); const snapshot = JSON.stringify(base);
+    const withFade = setTransition(base, 'a', 'wipeleft', 0.3);
+    expect(setTransition(withFade, 'a', 'cut')[0].transition).toBeUndefined();
+    expect(setTransition(base, 'c', 'fade', 1)[2].transition).toBeUndefined();
+    expect(setTransition(base, 'yok', 'fade')).toBe(base);
+    expect(JSON.stringify(base)).toBe(snapshot);
+    expect(setTransition(withFade, 'a', 'fade')[0].transition?.duration).toBe(0.3);
+  });
+  it('Rust isteği: geçiş yoksa undefined, varsa klip−1 adet [ad, süre] (cut = 0)', () => {
+    expect(transitionsRequest(state(three()))).toBeUndefined();
+    expect(transitionsRequest(state(setTransition(three(), 'b', 'fade', 0.8)))).toEqual([['cut', 0], ['fade', 0.8]]);
+    expect(TRANSITIONS.map(t => t.id)).toContain('cut');
+    expect(new Set(TRANSITIONS.map(t => t.id)).size).toBe(TRANSITIONS.length);
+  });
+  it('doğrulama: sınırı aşan geçiş süresi Türkçe mesajla reddedilir', () => {
+    const bad = three(); bad[0] = { ...bad[0], transition: { kind: 'fade', duration: 2.5 } };
+    expect(validateTimeline(state(bad))).toMatch(/geçiş süresi/);
+    expect(validateTimeline(state(setTransition(three(), 'a', 'fade', 0.5)))).toBeNull();
+  });
+  it('kaydet → aç: geçiş ve renk ayarı korunur; cut/varsayılan kaydedilmez; bozuk değerler düzeltilir', () => {
+    let clips = setTransition(three(), 'a', 'circleopen', 0.7);
+    clips = setAdjust(clips, 'b', { brightness: 0.2, saturation: 1.5 });
+    const t = state(clips, { burnSubtitles: true, applyMix: true });
+    expect(parseTimeline(JSON.parse(JSON.stringify(t)))).toEqual(t);
+    const parsed = parseTimeline({ clips: [{ path: 'a.mp4', transition: { kind: 'cut', duration: 1 }, adjust: { brightness: 0, contrast: 1, saturation: 1 } }, { path: 'b.mp4', transition: { kind: 'evil;rm', duration: 1 }, adjust: { brightness: 9, contrast: -4, saturation: 'x' } }], burnSubtitles: 'evet' })!;
+    expect('transition' in parsed.clips[0]).toBe(false);
+    expect('adjust' in parsed.clips[0]).toBe(false);
+    expect('transition' in parsed.clips[1]).toBe(false);
+    expect(parsed.clips[1].adjust).toEqual({ brightness: 1, contrast: 0, saturation: 1 });
+    expect('burnSubtitles' in parsed).toBe(false);
+    expect(parseTimeline({ clips: [{ path: 'a', transition: { kind: 'fade', duration: 99 } }] })!.clips[0].transition?.duration).toBe(3);
+  });
+});
+
+describe('renk ayarı', () => {
+  it('ayarlar sınırlanır; varsayılana dönünce kaldırılır; istek yalnız ayar varsa gönderilir', () => {
+    const base = [clip('a'), clip('b')];
+    expect(adjustsRequest(state(base))).toBeUndefined();
+    let clips = setAdjust(base, 'a', { brightness: 5, contrast: -1, saturation: 9 });
+    expect(clips[0].adjust).toEqual({ brightness: 1, contrast: 0, saturation: 3 });
+    expect(adjustsRequest(state(clips))).toEqual([[1, 0, 3], [0, 1, 1]]);
+    clips = setAdjust(clips, 'a', { ...DEFAULT_ADJUST });
+    expect(clips[0].adjust).toBeUndefined();
+    expect(setAdjust(base, 'yok', { brightness: 0.1 })).toBe(base);
+  });
+  it('açılışta geçiş süresi, değişen kesite göre yeniden sınırlanır ve not düşer', () => {
+    const clips = setTransition([clip('a', { in: 0, out: 4, sourceDuration: 4 }), clip('b', { in: 0, out: 4, sourceDuration: 4 })], 'a', 'fade', 2);
+    const r = reconcileTimeline(state(clips), [ok(4), ok(1)]);
+    expect(r.timeline.clips[1].out).toBe(1);
+    expect(r.timeline.clips[0].transition?.duration).toBe(0.5);
+    expect(r.notes.some(n => n.includes('geçiş süresi'))).toBe(true);
+  });
+});

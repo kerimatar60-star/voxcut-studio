@@ -1,7 +1,7 @@
 use std::{fs, path::Path, process::Command, time::{SystemTime, UNIX_EPOCH}};
 
 // path, gain, pan, timeline start, source in, length, fade in, fade out.
-type Track = (String, f64, f64, f64, f64, f64, f64, f64);
+pub(crate) type Track = (String, f64, f64, f64, f64, f64, f64, f64);
 
 pub(crate) fn probe(path: &str) -> Result<(f64, bool, bool), String> {
     let result = Command::new("ffprobe").args(["-v", "error", "-show_entries", "format=duration:stream=codec_type", "-of", "default=noprint_wrappers=1", path])
@@ -56,7 +56,7 @@ fn build_filters(duration: f64, has_audio: bool, original_gain: f64, tracks: &[T
     (filters.join(";"), duck)
 }
 
-fn render(video: String, output: String, original_gain: f64, tracks: Vec<Track>, format: &str, ducking: f64) -> Result<String, String> {
+pub(crate) fn render(video: String, output: String, original_gain: f64, tracks: Vec<Track>, format: &str, ducking: f64) -> Result<String, String> {
     let (ext, audio_only, codec_args) = format_spec(format)?;
     if !Path::new(&video).is_file() { return Err("Kaynak dosya bulunamadı.".into()); }
     if tracks.len() > 8 || !original_gain.is_finite() || !(0.0..=2.0).contains(&original_gain) { return Err("Geçersiz kanal sayısı veya ses seviyesi.".into()); }

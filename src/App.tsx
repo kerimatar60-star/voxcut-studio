@@ -133,7 +133,7 @@ export default function App(){
             ?<DesignProperties element={element} changeElement={design.changeElement} removeElement={design.removeElement} onMove={design.moveSelected} onDuplicate={design.duplicateSelected} onAlign={design.alignSelected}/>
             :workspace==='subtitles'
               ?<CueList cues={project.subtitles} onUpdate={subs.updateCue} onRemove={subs.removeCue} onAdd={subs.addCue} onExportSrt={subs.exportSrt}/>
-              :<MediaProperties workspace={workspace} asset={asset} videoVolume={videoVolume} audioVolume={audioVolume} setVideoVolume={setVideoVolume} setAudioVolume={setAudioVolume} timeline={project.timeline??emptyTimeline()} onTimelineChange={changeTimeline} timelineLoadToken={timelineLoadToken}/>}
+              :<MediaProperties workspace={workspace} asset={asset} videoVolume={videoVolume} audioVolume={audioVolume} setVideoVolume={setVideoVolume} setAudioVolume={setAudioVolume} timeline={project.timeline??emptyTimeline()} onTimelineChange={changeTimeline} timelineLoadToken={timelineLoadToken} cues={project.subtitles} mix={project.audioMix??emptyAudioMix()}/>}
           <div className="properties-footer"><WandSparkles size={15}/> AI modelleri isteğe bağlı kurulacak.</div>
         </aside>
       </div>
