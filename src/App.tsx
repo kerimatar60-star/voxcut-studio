@@ -13,6 +13,7 @@ import {measureImage} from './core/imageSize';
 import {describeToolProblems} from './core/toolCheck';
 import type {ToolCheck} from './core/toolCheck';
 import {tabs} from './shared/workspaces';
+import {useTheme} from './shared/useTheme';
 import {AudioMixPanel} from './features/audio/components/AudioMixPanel';
 import {DesignProperties} from './features/design/components/DesignProperties';
 import {DesignStage} from './features/design/components/DesignStage';
@@ -32,6 +33,7 @@ import {MediaProperties} from './features/video/components/MediaProperties';
 import {Timeline} from './features/video/components/Timeline';
 
 export default function App(){
+  const {theme,toggle:toggleTheme}=useTheme();
   const [project,setProject]=useState<ProjectDocument>(()=>exampleProject());
   const [workspace,setWorkspace]=useState<Workspace>('design');
   const [selectedElement,setSelectedElement]=useState<string|null>(null);
@@ -102,7 +104,7 @@ export default function App(){
 
     <main className="shell">
       <h1 className="sr-only">VoxCut Studio</h1>
-      <TopBar name={project.name} onRename={name=>update(p=>({...p,name}))} dirty={files.dirty} projectPath={files.projectPath} isPackage={files.isPackage}
+      <TopBar theme={theme} onToggleTheme={toggleTheme} name={project.name} onRename={name=>update(p=>({...p,name}))} dirty={files.dirty} projectPath={files.projectPath} isPackage={files.isPackage}
         histInfo={history.histInfo} undo={history.undo} redo={history.redo}
         recent={files.recent} recentOpen={files.recentOpen} setRecentOpen={files.setRecentOpen} refreshRecent={files.refreshRecent} openRecent={files.openRecent} forgetRecent={files.forgetRecent}
         openProject={files.openProject} openPackage={files.openPackage} savePackage={files.savePackage} collectMedia={files.collectMedia} backups={files.backups} refreshBackups={files.refreshBackups} restoreBackup={files.restoreBackup} saveProject={files.saveProject} onExport={exportCurrent}/>
@@ -140,7 +142,7 @@ export default function App(){
           <div className="properties-footer"><WandSparkles size={15}/> AI modelleri isteğe bağlı kurulacak.</div>
         </aside>
       </div>
-      <footer className="statusbar"><span><span className="status-online"/> Yerel oturum</span><span><BookOpen size={13}/> Kılavuz: README.md</span><span className="footer-right"><Mic2 size={13}/> Ses AI planlandı <span className="sep">•</span> <Scissors size={13}/> MP4 kesme modülü hazır</span></footer>
+      <footer className="statusbar"><span><span className="status-online"/> Yerel oturum</span><span><BookOpen size={13}/> Kılavuz: README.md</span><span className="footer-right"><Mic2 size={13}/> Yapay zekâ ayrıştırma planlandı <span className="sep">•</span> <Scissors size={13}/> Birleştirme ve kesme hazır</span></footer>
     </main>
     <input ref={designImageInputRef} type="file" accept="image/*" hidden onChange={e=>void onDesignImageFiles(e.target.files)}/>
     <input ref={media.mediaInputRef} type="file" accept="video/*,audio/*,image/*" multiple hidden onChange={e=>media.addMedia(e.target.files)}/>

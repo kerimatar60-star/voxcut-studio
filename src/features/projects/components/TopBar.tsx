@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {ChevronDown,Clock3,Download,FolderOpen,Package,Redo2,Save,Undo2,Video} from 'lucide-react';
+import {ChevronDown,Clock3,Download,FolderOpen,Moon,Package,Redo2,Save,Sun,Undo2,Video} from 'lucide-react';
 import {isTauri} from '@tauri-apps/api/core';
 import type {RecentProject} from '../useProjectFiles';
 
@@ -12,6 +12,7 @@ type Props={
   openProject:()=>void;openPackage:()=>void;savePackage:(forceDialog?:boolean)=>void;collectMedia:()=>void;
   backups:[name:string,millis:number,bytes:number][];refreshBackups:()=>void;restoreBackup:(name:string)=>void;saveProject:(forceDialog?:boolean)=>void;
   onExport:()=>void;
+  theme:'dark'|'light';onToggleTheme:()=>void;
 };
 
 export function TopBar(p:Props){
@@ -39,6 +40,7 @@ export function TopBar(p:Props){
       <button className="btn btn-dark" onClick={p.openProject}><FolderOpen size={16}/> <span>Proje Aç</span></button>
       <button className="btn btn-dark" onClick={()=>p.saveProject()}><Save size={16}/> <span>{isTauri()?'Kaydet':'JSON Kaydet'}</span></button>
       {isTauri()&&projectPath&&<button className="btn btn-dark" onClick={()=>p.saveProject(true)}><span>Farklı Kaydet</span></button>}
+      <button className="btn btn-dark btn-icon" onClick={p.onToggleTheme} title={p.theme==='dark'?'Açık temaya geç':'Koyu temaya geç'} aria-label={p.theme==='dark'?'Açık temaya geç':'Koyu temaya geç'}>{p.theme==='dark'?<Sun size={16}/>:<Moon size={16}/>}</button>
       <button className="btn btn-primary" onClick={p.onExport}><Download size={16}/> Dışa Aktar</button>
     </div>
   </header>;
