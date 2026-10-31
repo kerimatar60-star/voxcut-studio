@@ -81,3 +81,5 @@
 .notice-warn{background:#47381f;border-color:#9a7a3a;color:#ffe3a6}
 .notice-warn button{color:#ffe3a6}
 .vc-wave{margin:4px 0 8px;border-radius:6px;background:#12141c;border:1px solid #2c2f42}
+.vc-denoise audio{width:100%;margin-top:6px}
+.vc-ab{display:flex;flex-direction:column;gap:6px}

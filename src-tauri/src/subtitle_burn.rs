@@ -77,6 +77,8 @@ fn render(input: String, output: String, srt: String, size_percent: f64, positio
     result
 }
 
+// Tauri komut bağımsız değişkenleri arayüzden adıyla tek tek gelir; bu yüzden düz parametre listesi kullanılır.
+#[allow(clippy::too_many_arguments)]
 #[tauri::command]
 pub async fn burn_subtitles(input_path: String, output_path: String, srt: String, size_percent: f64, position: String, color: String, font: Option<String>, bold: Option<bool>, outline: Option<f64>, boxed: Option<bool>) -> Result<String, String> {
     let defaults = Look::default();
