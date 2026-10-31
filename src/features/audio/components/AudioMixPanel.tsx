@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { baseName, MAX_MIX_TRACKS, mixRequest, printChanged, reconcileMix, type AudioMixState, type MixTrack, type ProbeResult } from '../../../core/audioMixModel';
+import { baseName, MAX_MIX_TRACKS, MIX_FORMATS, mixFormatSpec, mixRequest, printChanged, reconcileMix, type MixFormat, type AudioMixState, type MixTrack, type ProbeResult } from '../../../core/audioMixModel';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
 
@@ -171,9 +171,10 @@ export function AudioMixPanel({ mix, onChange, loadToken }: Props) {
       if (bad.length) throw new Error(bad.join(' '));
       onChange(() => check.mix);
       const request = mixRequest(check.mix.videoDuration, check.mix.gain, check.mix.mute, check.mix.solo, check.mix.tracks);
-      const outputPath = await save({ title: 'Ses miksli MP4 kaydet', defaultPath: 'VoxCut_SesMix.mp4', filters: [{ name: 'MP4', extensions: ['mp4'] }] });
+      const spec = mixFormatSpec(check.mix.format);
+      const outputPath = await save({ title: `${spec.label} olarak kaydet`, defaultPath: `VoxCut_SesMix.${spec.ext}`, filters: [{ name: spec.filter, extensions: [spec.ext] }] });
       if (!outputPath) return;
-      const result = await invoke<string>('mix_video_audio', { inputPath: check.mix.videoPath, outputPath, ...request });
+      const result = await invoke<string>('mix_video_audio', { inputPath: check.mix.videoPath, outputPath, ...request, format: spec.id, ducking: check.mix.ducking ?? 0 });
       setMessage(result); setLastOutput(outputPath);
     } catch (e) { report(e); } finally { setBusy(false); }
   }
@@ -212,7 +213,12 @@ export function AudioMixPanel({ mix, onChange, loadToken }: Props) {
       </fieldset>)}
       <button type="button" className="btn btn-dark wide" disabled={tracks.length >= MAX_MIX_TRACKS} onClick={addTrack}>2 · Ses kanalı ekle ({tracks.length}/{MAX_MIX_TRACKS})</button>
       <p className="vc-trim-hint">Ses veya video dosyası seçebilirsin (videonun sesi kullanılır). Video bitiminden taşan ses kesilir. Solo etkinse yalnız solo kanallar duyulur; sustur her zaman önceliklidir. Limiter taşmayı sınırlar.</p>
-      <button type="button" className="btn btn-primary wide" disabled={!mix.videoPath} onClick={render}>4 · Ses miksli MP4 kaydet</button>
+      <div className="property-grid">
+        <label className="field">Çıktı biçimi<select aria-label="Çıktı biçimi" value={mix.format ?? 'mp4'} onChange={e => onChange(m => ({ ...m, format: e.target.value === 'mp4' ? undefined : (e.target.value as MixFormat) }))}>{MIX_FORMATS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}</select></label>
+        <label className="field">Otomatik müzik kısma: {mix.ducking ? `%${Math.round(mix.ducking * 100)}` : 'kapalı'}<input aria-label="Otomatik müzik kısma gücü" type="range" min="0" max="1" step="0.05" value={mix.ducking ?? 0} onChange={e => onChange(m => ({ ...m, ducking: Number(e.target.value) > 0 ? Number(e.target.value) : undefined }))} /></label>
+      </div>
+      <p className="vc-trim-hint">Otomatik kısma: videonun kendi sesi (konuşma) varken ek kanallar (müzik) kısılır. {mix.hasOriginal ? '' : 'Bu videoda orijinal ses yok; kısma uygulanmaz. '}WAV/MP3/FLAC seçilirse yalnız ses dosyası üretilir.</p>
+      <button type="button" className="btn btn-primary wide" disabled={!mix.videoPath} onClick={render}>4 · {mixFormatSpec(mix.format).label} kaydet</button>
     </fieldset>
     {busy && <p role="status">İşleniyor… Lütfen bekle.</p>}
     {lastOutput && <p className="vc-trim-hint">Son çıktı: {lastOutput}</p>}

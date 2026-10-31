@@ -78,3 +78,5 @@
 .vc-progress{position:relative;height:18px;border-radius:9px;background:#12141c;border:1px solid #3a3d52;overflow:hidden}
 .vc-progress-bar{height:100%;background:linear-gradient(90deg,#6d4de0,#a78bfa);transition:width .25s}
 .vc-progress span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff}
+.notice-warn{background:#47381f;border-color:#9a7a3a;color:#ffe3a6}
+.notice-warn button{color:#ffe3a6}

@@ -1,10 +1,21 @@
 export type MixTrack = { id: string; path: string; gain: number; pan: number; start: number; sourceIn: number; length: number; fadeIn: number; fadeOut: number; mute: boolean; solo: boolean; sourceDuration: number; size?: number; fingerprint?: string };
 
 /** Projeyle kaydedilen miks durumu. Yalnız dosya yolları ve ayarlar; medya baytları asla tutulmaz. */
-export type AudioMixState = { videoPath: string; videoDuration: number; hasOriginal: boolean; gain: number; mute: boolean; solo: boolean; tracks: MixTrack[]; videoSize?: number; videoFingerprint?: string };
+export type AudioMixState = { videoPath: string; videoDuration: number; hasOriginal: boolean; gain: number; mute: boolean; solo: boolean; tracks: MixTrack[]; videoSize?: number; videoFingerprint?: string; format?: MixFormat; ducking?: number };
 export type ProbeResult = { ok: true; duration: number; hasAudio: boolean; hasVideo: boolean } | { ok: false; error: string };
 
 export const MAX_MIX_TRACKS = 8;
+
+/** Miks çıktı biçimleri (Rust `mix_video_audio` ile aynı adlar). `mp4` varsayılandır ve kaydedilmez. */
+export const MIX_FORMATS = [
+  { id: 'mp4', label: 'Ses miksli MP4', ext: 'mp4', filter: 'MP4 video' },
+  { id: 'wav', label: 'WAV (16 bit)', ext: 'wav', filter: 'WAV ses' },
+  { id: 'wav24', label: 'WAV (24 bit)', ext: 'wav', filter: 'WAV ses' },
+  { id: 'mp3', label: 'MP3 (192 kbps)', ext: 'mp3', filter: 'MP3 ses' },
+  { id: 'flac', label: 'FLAC (kayıpsız)', ext: 'flac', filter: 'FLAC ses' },
+] as const;
+export type MixFormat = (typeof MIX_FORMATS)[number]['id'];
+export const mixFormatSpec = (id: MixFormat | undefined) => MIX_FORMATS.find(f => f.id === id) ?? MIX_FORMATS[0];
 export const emptyAudioMix = (): AudioMixState => ({ videoPath: '', videoDuration: 0, hasOriginal: true, gain: 1, mute: false, solo: false, tracks: [] });
 export const baseName = (path: string) => path.split(/[\\/]/).pop() || 'Seçilmedi';
 
@@ -47,6 +58,8 @@ export function parseAudioMix(input: unknown): AudioMixState | undefined {
   return {
     videoPath: text(v.videoPath, 1024), videoDuration: num(v.videoDuration, 0, 0, 86400), hasOriginal: v.hasOriginal !== false,
     gain: num(v.gain, 1, 0, 2), mute: v.mute === true, solo: v.solo === true, tracks,
+    ...(MIX_FORMATS.some(f => f.id === v.format && f.id !== 'mp4') ? { format: v.format as MixFormat } : {}),
+    ...(num(v.ducking, 0, 0, 1) > 0 ? { ducking: num(v.ducking, 0, 0, 1) } : {}),
     ...(videoPrint.fingerprint ? { videoSize: videoPrint.size, videoFingerprint: videoPrint.fingerprint } : {}),
   };
 }

@@ -1,5 +1,5 @@
-import {useCallback,useRef,useState} from 'react';
-import {isTauri} from '@tauri-apps/api/core';
+import {useCallback,useEffect,useRef,useState} from 'react';
+import {invoke,isTauri} from '@tauri-apps/api/core';
 import {BookOpen,Check,Mic2,Scissors,Settings2,ShieldCheck,Video,WandSparkles} from 'lucide-react';
 import {exampleProject} from './core/project';
 import {exportDesign} from './core/designExport';
@@ -10,6 +10,8 @@ import type {TimelineState} from './core/timelineModel';
 import type {AudioMixState} from './core/audioMixModel';
 import type {MediaAsset,ProjectDocument,UpdateProject,Workspace} from './core/types';
 import {measureImage} from './core/imageSize';
+import {describeToolProblems} from './core/toolCheck';
+import type {ToolCheck} from './core/toolCheck';
 import {tabs} from './shared/workspaces';
 import {AudioMixPanel} from './features/audio/components/AudioMixPanel';
 import {DesignProperties} from './features/design/components/DesignProperties';
@@ -38,6 +40,9 @@ export default function App(){
   const [currentTime,setCurrentTime]=useState(0);
   const [mixLoadToken,setMixLoadToken]=useState(0);
   const [timelineLoadToken,setTimelineLoadToken]=useState(0);
+  // FFmpeg/FFprobe ve gerekli yetenekler açılışta bir kez denetlenir (masaüstü); eksikse açık uyarı gösterilir.
+  const [toolProblems,setToolProblems]=useState<string[]>([]);
+  useEffect(()=>{if(isTauri())invoke<ToolCheck[]>('check_tools').then(c=>setToolProblems(describeToolProblems(c))).catch(()=>{});},[]);
   const update:UpdateProject=fn=>setProject(p=>({...fn(p),updatedAt:Date.now()}));
   const changeTimeline=useCallback((fn:(t:TimelineState)=>TimelineState)=>setProject(p=>({...p,timeline:fn(p.timeline??emptyTimeline()),updatedAt:Date.now()})),[]);
   const changeMix=useCallback((fn:(m:AudioMixState)=>AudioMixState)=>setProject(p=>({...p,audioMix:fn(p.audioMix??emptyAudioMix()),updatedAt:Date.now()})),[]);
@@ -99,6 +104,7 @@ export default function App(){
         histInfo={history.histInfo} undo={history.undo} redo={history.redo}
         recent={files.recent} recentOpen={files.recentOpen} setRecentOpen={files.setRecentOpen} refreshRecent={files.refreshRecent} openRecent={files.openRecent} forgetRecent={files.forgetRecent}
         openProject={files.openProject} openPackage={files.openPackage} savePackage={files.savePackage} collectMedia={files.collectMedia} backups={files.backups} refreshBackups={files.refreshBackups} restoreBackup={files.restoreBackup} saveProject={files.saveProject} onExport={exportCurrent}/>
+      {toolProblems.map((text,i)=><div key={i} className="notice notice-warn" role="alert"><span>⚠ {text}</span><button onClick={()=>setToolProblems(list=>list.filter((_,k)=>k!==i))}>×</button></div>)}
       {files.recovery&&<div className="notice"><Check size={15}/><span>Kaydedilmemiş önceki oturum bulundu.</span><button style={{fontSize:12}} onClick={files.restoreRecovery}>Geri yükle</button><button style={{fontSize:12}} onClick={files.clearRecovery}>Sil</button></div>}
       {notice && <div className="notice"><Check size={15}/><span>{notice}</span><button onClick={()=>setNotice('')}>×</button></div>}
       <div className="workspace">
