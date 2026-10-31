@@ -78,7 +78,7 @@ export default function App(){
       <div className="workspace">
         <section className="panel left-panel">
           <div className="panel-heading"><div><span className="eyebrow">ÇALIŞMA ALANI</span><h2>{tabs.find(t=>t.id===workspace)?.label} Stüdyosu</h2></div><Settings2 size={18} className="muted-icon"/></div>
-          {workspace==='design'&&<DesignTools design={project.design} update={update} addElement={design.addElement} onCanvas={design.setCanvas} onExport={exportImage}/>}
+          {workspace==='design'&&<DesignTools design={project.design} update={update} addElement={design.addElement} onCanvas={design.setCanvas} onExport={exportImage} onTemplate={id=>{design.applyTemplate(id);setNotice('Şablon uygulandı. Beğenmezsen üstteki Geri al ile önceki tasarıma dönebilirsin.');}}/>}
           {(workspace==='video'||workspace==='audio')&&<MediaLibrary library={media.library} filter={media.filter} setFilter={media.setFilter} selectedAsset={media.selectedAsset} setSelectedAsset={media.setSelectedAsset} urls={media.urls} problems={media.problems} busy={media.busy} onPickFile={pickMedia} removeAsset={media.removeAsset} onRelink={id=>void media.relinkAsset(id)} onRelinkFolder={()=>void media.relinkFromFolder()}/>}
           {workspace==='subtitles'&&<SubtitleTools cues={project.subtitles} onAdd={subs.addCue} onExportSrt={subs.exportSrt} onExportVtt={subs.exportVtt} onImportClick={()=>subs.subtitleInputRef.current?.click()}/>}
           <div className="panel-bottom"><ShieldCheck size={16}/><div><strong>Önce yerel, sonra bulut</strong><span>Dosyalar izinsiz yüklenmez.</span></div></div>

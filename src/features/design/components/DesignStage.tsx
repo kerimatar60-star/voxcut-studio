@@ -3,25 +3,11 @@ import type {CSSProperties,PointerEvent as ReactPointerEvent} from 'react';
 import {Check,LayoutTemplate} from 'lucide-react';
 import {resizeBox,rotationFromPointer} from '../../../core/designGeometry';
 import type {Box,Handle} from '../../../core/designGeometry';
-import {fontStack,LINE_HEIGHT} from '../../../core/designText';
 import type {DesignElement,ProjectDocument,UpdateProject} from '../../../core/types';
+import {elementStyle} from '../elementStyle';
 
 type Drag={mode:'move'|'resize'|'rotate';id:string;startX:number;startY:number;origin:Box;handle?:Handle};
 type Props={design:ProjectDocument['design'];selectedElement:string|null;onSelect:(id:string|null)=>void;update:UpdateProject;onDelete:()=>void;onNudge:(dx:number,dy:number)=>void};
-
-/** Önizleme stili: dışa aktarma ile aynı kurallar (dönme, opaklık, yazı tipi, hizalama, gölge, kontur). */
-function elementStyle(el:DesignElement,design:ProjectDocument['design']):CSSProperties{
-  const style:CSSProperties={left:`${el.x}%`,top:`${el.y}%`,width:`${el.width}%`,height:`${el.height}%`,color:el.color,background:el.kind==='text'?'transparent':el.background,fontSize:`${el.fontSize/design.width*100}cqw`,fontWeight:el.weight,lineHeight:LINE_HEIGHT};
-  if(el.opacity!==undefined)style.opacity=el.opacity;
-  if(el.rotation)style.transform=`rotate(${el.rotation}deg)`;
-  if(el.kind==='text'){
-    style.fontFamily=fontStack(el.fontFamily);style.textAlign=el.align??'left';style.overflowWrap='anywhere';
-    if(el.italic)style.fontStyle='italic';
-    if(el.shadow)style.textShadow='0 0.05em 0.12em rgba(0,0,0,0.55)';
-    if(el.strokeWidth){style.WebkitTextStroke=`${el.strokeWidth/design.width*100}cqw ${el.strokeColor??'#000000'}`;style.paintOrder='stroke fill';}
-  }
-  return style;
-}
 
 const HANDLES:Handle[]=['nw','ne','sw','se'];
 
@@ -75,17 +61,17 @@ export function DesignStage({design,selectedElement,onSelect,update,onDelete,onN
     window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey);
   },[]);
 
-  const frameStyle:CSSProperties={aspectRatio:`${design.width} / ${design.height}`,...(design.height>design.width?{height:'100%',width:'auto',maxWidth:'100%'}:{})};
+  const frameStyle={'--ar':design.width/design.height} as CSSProperties;
   return <>
     <div className="board-tools"><span className="chip"><LayoutTemplate size={14}/> Tasarım tuvali</span><span className="chip pale">Sürükle, köşeden boyutlandır, üstten döndür</span></div>
-    <div className="stage-frame" style={frameStyle}><div ref={stageRef} className="design-stage" style={{background:design.background}} onClick={()=>onSelect(null)}>
+    <div className="stage-fit"><div className="design-frame" style={frameStyle}><div ref={stageRef} className="design-stage" style={{background:design.background}} onClick={()=>onSelect(null)}>
       {design.elements.map(el=><div key={el.id} data-element={el.id} className={`design-element ${el.kind} ${el.id===selectedElement?'selected':''}`} onClick={e=>e.stopPropagation()} onPointerDown={e=>begin(e,el,'move')} onPointerMove={onPointerMove} onPointerUp={end} onPointerCancel={end} style={elementStyle(el,design)}>{el.kind==='text'?el.text:null}</div>)}
       {selected&&<div className="design-handles" style={{left:`${selected.x}%`,top:`${selected.y}%`,width:`${selected.width}%`,height:`${selected.height}%`,transform:selected.rotation?`rotate(${selected.rotation}deg)`:undefined}}>
         {HANDLES.map(h=><div key={h} data-handle={h} className={`design-handle ${h}`} onClick={e=>e.stopPropagation()} onPointerDown={e=>begin(e,selected,'resize',h)} onPointerMove={onPointerMove} onPointerUp={end} onPointerCancel={end}/>)}
         <div className="design-handle-stem"/>
         <div data-handle="rotate" className="design-handle rotate" title="Döndür (Shift: 15° adımlar)" onClick={e=>e.stopPropagation()} onPointerDown={e=>begin(e,selected,'rotate')} onPointerMove={onPointerMove} onPointerUp={end} onPointerCancel={end}/>
       </div>}
-    </div></div>
+    </div></div></div>
     <div className="below-preview"><span>Proje tuvali • Önizleme</span><span>PNG, JPEG ve WebP çıkışı çalışır <Check size={14}/></span></div>
   </>;
 }

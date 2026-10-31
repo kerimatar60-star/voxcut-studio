@@ -2,6 +2,7 @@ import {duplicateLayer,moveLayer,resizeCanvas} from '../../core/designCanvas';
 import {alignBox} from '../../core/designGeometry';
 import type {AlignHow} from '../../core/designGeometry';
 import type {LayerMove} from '../../core/designCanvas';
+import {instantiateTemplate,templateById} from '../../core/designTemplates';
 import {makeElement,newId} from '../../core/project';
 import type {DesignElement,UpdateProject} from '../../core/types';
 
@@ -32,5 +33,13 @@ export function useDesignActions(update:UpdateProject,selected:string|null,setSe
     if(!selected)return;
     update(p=>({...p,design:{...p.design,elements:p.design.elements.map(e=>e.id===selected?alignBox(e,how):e)}}));
   };
-  return {changeElement,addElement,removeElement,setCanvas,moveSelected,duplicateSelected,nudgeSelected,alignSelected};
+  /** Şablonu uygular (tuval + katmanlar değişir, seçim temizlenir); geri al ile eski tasarıma dönülür. */
+  const applyTemplate=(templateId:string)=>{
+    const template=templateById(templateId);
+    if(!template)return;
+    const next=instantiateTemplate(template,newId);
+    update(p=>({...p,design:next}));
+    setSelected(null);
+  };
+  return {changeElement,addElement,removeElement,setCanvas,moveSelected,duplicateSelected,nudgeSelected,alignSelected,applyTemplate};
 }
