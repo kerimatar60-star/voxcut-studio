@@ -19,7 +19,7 @@
 | F015 | Vokal/instrumental ayırma | PLAN | A6, 2-stem WAV dosyaları |
 | F016 | Davul/bas/diğer/vokal ayırma | PLAN | A6, 4-stem WAV dosyaları |
 | F017 | Türkçe otomatik altyazı | IMPLEMENTED (gerçek motorla İngilizce örnekte TESTED; Türkçe doğruluk ölçülmedi) | A45, whisper.cpp + ggml small önerilir |
-| F018 | Komutla video/ses düzenleme | PLAN | A8, schema+diff+undo |
+| F018 | Komutla video/ses düzenleme | IMPLEMENTED (kural tabanlı; birim + tarayıcıda TESTED) | A46, kapalı şema + plan/onay + geri al |
 | F019 | 4K/proxy NVENC | PLAN | A8, GPU/CPU fallback |
 | F020 | Windows NSIS dağıtım | PLAN | A9, temiz sistem kurulum testi |
 | F021 | Tam proje kalıcılığı/relink | PLAN | A1, kapat-aç sonra medya bulunmalı |
@@ -244,3 +244,12 @@
 - **ÖLÇÜLMEDİ:** Türkçe doğruluk. Bu makinede yalnız İngilizce SAPI sesi (Zira) kurulu; Türkçe konuşma örneği olmadan WER ölçülemez. Whisper çıktısı özel isimlerde, gürültüde ve müzik üstünde hatalı olabilir; kullanıcı dinleyerek düzeltmelidir. Hız ölçümü (small/medium, uzun kayıt) yapılmadı; GPU (CUDA) sürümü kullanılmıyor, CPU motoru kullanılır. Kelime zamanlaması, konuşmacı ayrımı, bölüm bölüm işleme yok.
 - [PENDING] Masaüstünde elle deneme (izinli 2 dakikalık Türkçe konuşma ile small modeli; SRT'nin videoya yazılması). Lisanslar: whisper.cpp MIT, OpenAI Whisper model ağırlıkları MIT; yine de dağıtım öncesi `docs/THIRD_PARTY_NOTICES.md` (A9) içinde belgelenecek.
 - Geri alma: `git revert` ile bu commit; yeni dosyalar `src-tauri/src/asr.rs`, `src/core/asr.ts`, `src/features/subtitles/components/AutoSubtitlePanel.tsx`.
+
+## A46 — 2026-10-31 A8: komutla düzenleme (kapalı işlem şeması, plan + onay + geri al)
+- [IMPLEMENTED] `src/core/editCommands.ts`: Türkçe cümle → **kapalı `EditAction` şeması** (11 işlem türü: müzik kısma gücü, videonun/ek seslerin düzeyi, sustur/aç, fade giriş/çıkış, altyazıyı kaydır, boş altyazıları sil, tüm geçişleri ayarla, altyazıyı videoya yaz bayrağı, ses miksi bayrağı). Ayrıştırıcı **kural tabanlıdır**: LLM, ağ, kabuk veya serbest komut yoktur; anlamadığı parçayı "Anlaşılamadı" diye gösterir ve hiçbir şey uydurmaz (ör. "dosyaları sil", "rm -rf /" işlem üretmez).
+- [IMPLEMENTED] `src/features/commands/components/CommandPanel.tsx` (Özellikler panelinde "Komutla düzenle"): yazdıkça plan görünür (her işlemin Türkçe açıklaması, uygulanamayanlar nedeniyle), **"Onayla ve uygula" olmadan hiçbir şey değişmez**. Uygulanan işlemler normal proje değişikliğidir → üstteki geri al/yinele ile geri alınır. İşlem kaydı (denetim) **yalnız bu oturumda** tutulur, projeye yazılmaz.
+- Doğrulamalar uygulamada: olmayan kanal, %0–200 dışı düzey, kesitten uzun fade, 0 sn öncesine taşan altyazı kaydırma, tek klipli geçiş vb. reddedilir; proje aynen kalır. Bazı işlemler başarısız olsa da geçerliler uygulanır.
+- Bilinen sınır: "müziği %25'e indir" cümlesi **hedef düzey değil kısma gücü** ayarlar (güç = %75); ses ve müzik ayrımı yapılamadığından "müzik" ek sesler için kullanılır. Otomatik altyazı, dışa aktarma gibi uzun işler komutla başlatılmaz (planlanmış sürece dahil değil).
+- [TESTED] Vitest 162/162 (19 test dosyası; 19 yeni test (ayrıştırma: kullanıcının örnek cümlesi, büyük harf/İ/I, ondalık ve sıra sayısı, tehlikeli girdi; uygulama: sınırlar, saflık, kısmi başarı, geçişler)). `npm run build` temiz.
+- [TESTED / ben, tarayıcı] "ALTYAZIYI 2 SN İLERİ AL, dosyaları sil" → plan 1 işlem + "Anlaşılamadı: dosyaları sil"; uygulayınca altyazı başlangıçları 0→2 ve 2.8→4.8; geri al 0 / 2.8'e döndürdü. Masaüstü penceresinde elle denenmedi.
+- Geri alma: yeni dosyalar `src/core/editCommands.ts`, `src/features/commands/`; `App.tsx` içinde tek satır.

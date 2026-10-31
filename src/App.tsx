@@ -25,6 +25,7 @@ import {useProjectFiles} from './features/projects/useProjectFiles';
 import {useProjectHistory} from './features/projects/useProjectHistory';
 import {CueList} from './features/subtitles/components/CueList';
 import {SubtitleTools} from './features/subtitles/components/SubtitleTools';
+import {CommandPanel} from './features/commands/components/CommandPanel';
 import {useSubtitles} from './features/subtitles/useSubtitles';
 import {MediaPreview} from './features/video/components/MediaPreview';
 import {MediaProperties} from './features/video/components/MediaProperties';
@@ -134,6 +135,7 @@ export default function App(){
             :workspace==='subtitles'
               ?<CueList cues={project.subtitles} onUpdate={subs.updateCue} onRemove={subs.removeCue} onAdd={subs.addCue} onExportSrt={subs.exportSrt}/>
               :<MediaProperties workspace={workspace} asset={asset} videoVolume={videoVolume} audioVolume={audioVolume} setVideoVolume={setVideoVolume} setAudioVolume={setAudioVolume} timeline={project.timeline??emptyTimeline()} onTimelineChange={changeTimeline} timelineLoadToken={timelineLoadToken} cues={project.subtitles} mix={project.audioMix??emptyAudioMix()}/>}
+          <CommandPanel project={project} update={update} onApplied={setNotice} onUndo={history.undo}/>
           <div className="properties-footer"><WandSparkles size={15}/> AI modelleri isteğe bağlı kurulacak.</div>
         </aside>
       </div>
