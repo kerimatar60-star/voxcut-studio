@@ -1,0 +1,45 @@
+﻿{
+    "$schema":  "https://schema.tauri.app/config/2",
+    "productName":  "VoxCut Studio",
+    "version":  "0.1.0",
+    "identifier":  "studio.voxcut.desktop",
+    "build":  {
+                  "beforeDevCommand":  "npm run dev",
+                  "devUrl":  "http://127.0.0.1:1420",
+                  "beforeBuildCommand":  "npm run build",
+                  "frontendDist":  "../dist"
+              },
+    "app":  {
+                "windows":  [
+                                {
+                                    "label":  "main",
+                                    "title":  "VoxCut Studio",
+                                    "width":  1440,
+                                    "height":  900,
+                                    "minWidth":  920,
+                                    "minHeight":  640,
+                                    "backgroundColor":  "#10121a"
+                                }
+                            ],
+                "security":  {
+                                 "csp":  "default-src \u0027self\u0027; script-src \u0027self\u0027; style-src \u0027self\u0027 \u0027unsafe-inline\u0027; img-src \u0027self\u0027 asset: http://asset.localhost blob: data:; media-src \u0027self\u0027 asset: http://asset.localhost blob: data:; connect-src ipc: http://ipc.localhost http://127.0.0.1:1420 ws://127.0.0.1:1420",
+                                 "assetProtocol":  {
+                                                       "enable":  true,
+                                                       "scope":  [
+
+                                                                 ]
+                                                   }
+                             }
+            },
+    "bundle":  {
+                   "active":  true,
+                   "targets":  [
+                                   "nsis"
+                               ],
+                   "icon":  [
+                                "icons/32x32.png",
+                                "icons/128x128.png",
+                                "icons/icon.ico"
+                            ]
+               }
+}

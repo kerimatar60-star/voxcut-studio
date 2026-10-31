@@ -1,0 +1,1 @@
+CLAUDE.md ve docs/ROADMAP.md'de en son TESTED olan aşamayı tespit et. Sıradaki henüz tamamlanmamış tek aşamanın kabul kriterlerini çıkar. Test öncesinde 'tamamlandı' deme. Kapsam, dosyalar, uygulama, test ve kalan eksikleri Türkçe kısa raporla; durumu FEATURE_MATRIX.md'ye işle. Kullanıcının dosyalarını silme veya AI/ücretli servisleri izinsiz kurma.

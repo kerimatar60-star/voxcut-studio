@@ -1,0 +1,21 @@
+[package]
+name = "voxcut-studio"
+version = "0.1.0"
+description = "VoxCut Studio Desktop"
+authors = ["VoxCut Studio Contributors"]
+edition = "2021"
+
+[lib]
+name = "voxcut_studio_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+rusqlite = { version = "0.41.1", features = ["bundled"] }
+serde_json = "1"
+sha2 = "0.10"
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-dialog = "2"
+

@@ -1,0 +1,25 @@
+import {duplicateLayer,moveLayer,resizeCanvas} from '../../core/designCanvas';
+import type {LayerMove} from '../../core/designCanvas';
+import {makeElement,newId} from '../../core/project';
+import type {DesignElement,UpdateProject} from '../../core/types';
+
+/** Tasarım katmanı işlemleri; seçili katman kimliği App'te tutulur (zaman çizelgesi ve özellikler de kullanır). */
+export function useDesignActions(update:UpdateProject,selected:string|null,setSelected:(id:string|null)=>void){
+  const changeElement=(changes:Partial<DesignElement>)=>{
+    if(!selected)return;
+    update(p=>({...p,design:{...p.design,elements:p.design.elements.map(e=>e.id===selected?{...e,...changes}:e)}}));
+  };
+  const addElement=(kind:DesignElement['kind'])=>{
+    const el=makeElement(kind);update(p=>({...p,design:{...p.design,elements:[...p.design.elements,el]}}));setSelected(el.id);
+  };
+  const removeElement=()=>{if(selected){update(p=>({...p,design:{...p.design,elements:p.design.elements.filter(e=>e.id!==selected)}}));setSelected(null);}};
+  const setCanvas=(width:number,height:number)=>update(p=>({...p,design:resizeCanvas(p.design,width,height)}));
+  const moveSelected=(move:LayerMove)=>{if(selected)update(p=>({...p,design:{...p.design,elements:moveLayer(p.design.elements,selected,move)}}));};
+  const duplicateSelected=()=>{
+    if(!selected)return;
+    const copyId=newId();
+    update(p=>({...p,design:{...p.design,elements:duplicateLayer(p.design.elements,selected,copyId).elements}}));
+    setSelected(copyId);
+  };
+  return {changeElement,addElement,removeElement,setCanvas,moveSelected,duplicateSelected};
+}
