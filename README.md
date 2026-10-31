@@ -1,107 +1,75 @@
-# VoxCut Studio 🎬🎙️🎨
+# VoxCut Studio
 
-**Ücretsiz, yerel-öncelikli tasarım + video + ses stüdyosu** (Windows 10/11 x64 hedefi).
+**Windows için ücretsiz, yerel çalışan tasarım + video + ses + altyazı stüdyosu.**
+Hesap yok, abonelik yok, bulut yok: dosyalarınız bilgisayarınızda kalır.
 
-> **Durum: ALPHA 0.1 / çalışan, kısmen test edilmiş uygulama.** Canva veya CapCut'ın tamamı değildir. Çalışanlar: tasarım tuvali + PNG; tek video kesme → MP4 ve çok kanallı ses miksi → MP4 (kullanıcı tarafından denendi); altyazı düzenleme, SRT/VTT içe-dışa aktarma ve altyazıyı videoya yakma; geri al/yinele; JSON ve `.voxcut` paket projeleri (göreli yollar, yedek, otomatik kayıt, kurtarma, son projeler); medya yolu + parmak iziyle yeniden bağlama. Masaüstü arayüz akışlarının çoğu henüz elle (GUI) kabul edilmedi; ayrıntı için `docs/FEATURE_MATRIX.md`. **Henüz yok:** çok klipli video timeline, WAV/MP3 çıktı, ses temizleme, enstrüman/vokal ayrıştırma, otomatik AI altyazı.
+*English: a free, local-first Windows creative studio (design canvas, multi-clip video merge with transitions, audio mixing/ducking, subtitles with offline Whisper). Alpha. Download the installer from [Releases](../../releases).*
 
-## Hızlı başlangıç (Windows / PowerShell)
+> **Durum: ALFA (0.1).** Çalışır ve otomatik testlerle denenmiştir, ama Canva veya CapCut'ın tamamı değildir ve gerçek kullanıcı testlerinden geçmedi. Aşağıdaki "Neler var / neler yok" bölümü dürüst durumu anlatır.
 
-**A.** ZIP'i aç, içindeki `voxcut-studio` klasörünü `D:\VoxCutStudio` gibi kısa bir yola taşı. Ardından PowerShell'de proje klasörüne gir:
+## İndirme ve kurulum
 
-```powershell
-cd D:\VoxCutStudio
-powershell -ExecutionPolicy Bypass -File .\scripts\doctor.ps1
-```
+1. [Releases](../../releases) sayfasından `VoxCut Studio_..._x64-setup.exe` dosyasını indirin. Windows 10/11 (64 bit).
+2. Çalıştırın. Yönetici izni gerekmez; kullanıcı klasörünüze kurulur.
+3. **İmzasız:** Windows SmartScreen "bilinmeyen yayıncı" uyarısı verebilir. *Daha fazla bilgi → Yine de çalıştır*. Dosyanın bütünlüğünü Release notundaki SHA-256 ile karşılaştırabilirsiniz.
+4. FFmpeg setup içinde gelir; ayrıca kurmanız gerekmez.
 
-**B.** Geliştirme araçların sağlamsa (Node.js 20.19+ / npm), bağımlılıkları kur ve kod doğrulamasını yap:
+Otomatik altyazı (Whisper) isteğe bağlıdır ve pakette **yoktur**: Altyazı sekmesindeki "Motoru indir / Modeli indir" düğmelerine bastığınızda resmî kaynaktan iner (motor 9 MB, model 74 MB – 1,5 GB, SHA-256 doğrulanır).
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1
-```
+## Neler var
 
-**C.** Web üzerinden başlangıç arayüzünü aç:
+| Alan | Durum |
+|---|---|
+| **Tasarım** | Metin / şekil / görsel katmanları, sürükle-boyutlandır-döndür, 13 özgün şablon, hazır tuval boyutları, PNG / JPEG / WebP çıktı |
+| **Video** | Çok klipli birleştirme (≤ 50 klip), 12 geçiş türü, klip başına renk ayarı, ilerleme + iptal, MP4 (H.264 + AAC) |
+| **Ses** | 8 ek kanal, seviye / pan / fade / sustur / solo, konuşurken müzik kısma (ducking), dalga formu, MP4 / WAV / MP3 / FLAC, klasik gürültü temizleme (A/B dinleme), klasik vokal azaltma |
+| **Altyazı** | Elle düzenleme, SRT / VTT içe-dışa aktarma, videoya yakma (yazı tipi, renk, kontur, kutu), **Whisper ile yerel otomatik altyazı** |
+| **Proje** | Geri al / yinele, otomatik kayıt, kurtarma, taşınabilir `.voxcut` paketi + yedekler, taşınmış medyayı yeniden bağlama |
+| **Komutla düzenleme** | "Altyazıyı 2 sn ileri al" gibi Türkçe cümleler: önce plan, onayınızla uygulanır, geri alınabilir (yapay zekâ kullanmaz) |
+| **Arayüz** | Koyu / açık tema, erişilebilirlik taramasından geçti (axe-core) |
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\run-web.ps1
-# Tarayıcı adresi: http://127.0.0.1:1420
-```
+## Neler yok / sınırlar
 
-**D.** Gerçek Windows masaüstü kabuğu için ayrıca **Rust (MSVC toolchain), Microsoft C++ Build Tools, WebView2** gerekir. Yüklendikten sonra:
+- **Yapay zekâ ile enstrüman ayrıştırma** (vokal / davul / bas) yok; yalnız klasik "orta kanal" yöntemi var.
+- **Türkçe konuşma tanıma doğruluğu ölçülmedi.** Çıktıyı dinleyerek düzeltin; özel isimlerde ve gürültüde hata yapar.
+- Önizleme oynatıcısı birleştirilmiş videoyu göstermez; sonuç dışa aktarınca görülür.
+- Keyframe animasyon, 4K proxy, çoklu seçim, mikrofon kaydı, sürüm güncelleme, İngilizce arayüz yok.
+- Uzun videolar: 10 dk 1080p birleştirme ölçüldü (≈ 1 dk). Saatlik videolar ve 4K denenmedi.
+- Yalnız Windows x64. NVENC/GPU kodlama kullanılmaz (CPU libx264).
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\run-desktop.ps1
-```
+Ayrıntılı ve kanıtlı durum: [`docs/FEATURE_MATRIX.md`](docs/FEATURE_MATRIX.md).
 
-**E.** Windows `.exe` kurulum dosyası derlemek için (Windows cihazda):
+## Gizlilik
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\build-windows.ps1
-# Çıktı genellikle src-tauri\target\release\bundle\nsis\ altındadır.
-```
+Uygulama kendiliğinden internete bağlanmaz. Yalnız siz "indir" dediğinizde Whisper motorunu/modelini indirir; ses ve projeleriniz hiçbir yere gönderilmez. Telemetri yoktur. Ayrıntı: [`docs/PRIVACY.md`](docs/PRIVACY.md).
 
-Ayrıntılar: [`docs/WINDOWS_SETUP.md`](docs/WINDOWS_SETUP.md). **Not:** scriptler Node/Rust/Build Tools'u otomatik yüklemez. Modeller ve FFmpeg de ayrıca onaylanarak entegre edilecek.
+## Kaynaktan derleme
 
-## Mevcut kullanılabilir işlevler
-
-- Tasarım: metin / dikdörtgen / elips ekleme; metin ve renk değiştirme; sürükle-bırak konumlama; PNG çıkarma.
-- Medya kütüphanesi: yerel görüntü, video, ses dosyasını mevcut oturumda seçme ve ön izleme; geçici nesne URL'leri.
-- Altyazı: zaman kodlu cümle ekleme, düzenleme, silme, SRT dışa aktarma.
-- Proje: JSON manifest kaydetme ve geri açma (**medya baytları manifest içinde değildir, yeniden yüklemek gerekir**).
-- Tasarım, video, ses, altyazı sekmeleriyle bir sonraki aşamalar için arayüz taslağı.
-
-## Planlanan ana işlevler
-
-Gerçek NLE timeline, kesme/birleştirme/MP4, ses kanalları/miks, WAV/MP3, konuşma temizleme, enstrüman-vokal ayrımı (2/4 stem), Whisper Türkçe altyazı, altyazıyı videoya yakma, renk/video efektleri, şablon kütüphanesi, 1080p/4K proxy, NSIS release installer.
-
-## Claude Code'u bu projede çalıştırma
-
-1. Claude Code'u proje kök klasöründe aç; `CLAUDE.md` otomatik okunsun.
-2. [`docs/FIRST_PROMPT.md`](docs/FIRST_PROMPT.md) içindeki ilk görevi gönder.
-3. Projeyi önce **A0 → A1 → A2 ...** sırasıyla ilerlet. `docs/ROADMAP.md` her etap için kabul kriteri tanımlar.
-4. Başarı raporlarında gerçekten geçmeyen testleri 'başarılı' işaretlemeyin.
-
-## Proje dokümanları
-
-- [`CLAUDE.md`](CLAUDE.md) — Claude'un ana kuralları ve eksiksiz modül planı.
-- [`docs/ROADMAP.md`](docs/ROADMAP.md) — 10 aşamalı geliştirme ve çıkış kriterleri.
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — katmanlar ve servis sınırları.
-- [`docs/FEATURE_MATRIX.md`](docs/FEATURE_MATRIX.md) — çalışıyor mu / planlandı mı?
-- [`docs/DATA_CONTRACTS.md`](docs/DATA_CONTRACTS.md) — proje ve clip veri modeli.
-- [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md) — birim, medya ve performans testleri.
-- [`docs/AI_MODELS.md`](docs/AI_MODELS.md) — ses temizleme, Whisper, vokal stem ve GPU.
-- [`docs/SECURITY_AND_LICENSES.md`](docs/SECURITY_AND_LICENSES.md) — gizlilik, FFmpeg ve model lisansı.
-- [`docs/WINDOWS_SETUP.md`](docs/WINDOWS_SETUP.md) — Windows başlangıcı / troubleshooting.
-- [`docs/FIRST_PROMPT.md`](docs/FIRST_PROMPT.md) — doğrudan Claude'a verilecek komut.
-
-## Geliştirici komutları
+Gerekenler: Node.js 20.19+, Rust (MSVC), Microsoft C++ Build Tools, WebView2, FFmpeg (geliştirirken PATH'te).
 
 ```powershell
 npm install
-npm run dev
-npm run typecheck
-npm test
-npm run build
-npm run desktop:dev
-npm run desktop:build
+npm run dev            # tarayıcıda arayüz (kısıtlı): http://127.0.0.1:1420
+npm run desktop:dev    # gerçek masaüstü penceresi
+npm test               # birim testleri
+npm run desktop:build  # FFmpeg'i indirir (SHA-256 doğrulamalı) ve tek setup üretir
 ```
 
-## Geliştirme ilkeleri
+Kurulum paketi: `src-tauri\target\release\bundle\nsis\`. Rust testleri: `cd src-tauri; cargo test` (gerçek FFmpeg kullanır; `npm run fetch:ffmpeg` ile indirip `src-tauriesourcesfmpeg` klasörünü veya kendi FFmpeg'inizi PATH'e ekleyin).
 
-Yerel kullanım; zorunlu hesap yok; filigransız temel çıktı hedefi; telif haklarına saygı; çökmede proje kurtarma; dosya gizliliği; kullanıcı istemeden ücretli API/modelleri indirmeme. Bu paket hiçbir ücretli servis hesabı veya gizli anahtar içermez.
+## Dokümanlar
 
-## A26 — 2026-10-31 güncel durum
-- [TESTED: kullanıcı doğrulaması] A25 video kesme ve 10 saniyelik sesli MP4 çıktısı çalışıyor.
-- [IMPLEMENTED] Ses sekmesinde ayrı A26 paneli: orijinal video sesi + en fazla 8 ek ses kanalı; seviye, pan, sustur/solo, kaynak kesiti, zamanlama, fade giriş/çıkış.
-- [IMPLEMENTED] Rust tarafında doğrulanan yollar/süreler; FFmpeg amix + limiter; AAC ses, video akışı kopyalama; sessiz video desteği. Arka planda çalışır. Mevcut hedefin üzerine yazmaz; geçici dosya doğrulandıktan sonra yayımlar.
-- [TESTED] npm run build (TypeScript dahil), npm test (mevcut 3 test), cargo check --offline geçti. Bu kontroller yeni ses miksinin duyularak doğrulandığı anlamına gelmez.
-- [PENDING / Claude] scripts/test-a26.ps1: mevcut test videosu + 660 Hz ton → test-output/VoxCut_A26_SesMix_Test.mp4. Henüz çalıştırılmadı.
-- [PENDING / Claude] Masaüstünde sessiz video, çoklu ses, solo/sustur, pan, fade, gecikme, Unicode yollar, geçersiz süre ve mevcut hedef koruması kontrol edilmeli.
-- Sınırlar: miks canlı ön izlemesi, ayarların proje JSON'una kaydı, waveform, iptal/ilerleme ve WAV/MP3 henüz yok. Sekmeden çıkınca A26 ayarları sıfırlanır. AI özellikleri planlandı.
-- Geri alma: backup_A26_20261031_140047 içindeki değiştirilmeden önceki dosyalar korunmuştur. Yeni dosyalar: src/components/AudioMixPanel.tsx, src-tauri/src/audio_mix.rs, scripts/test-a26.ps1.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — mimari
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) — aşamalar
+- [`docs/FEATURE_MATRIX.md`](docs/FEATURE_MATRIX.md) — ne çalışıyor, ne test edildi
+- [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md) — test envanteri
+- [`docs/AI_MODELS.md`](docs/AI_MODELS.md) — Whisper kaynakları ve doğrulama özetleri
+- [`docs/THIRD_PARTY_NOTICES.md`](docs/THIRD_PARTY_NOTICES.md) — üçüncü taraf lisanslar
+- [`docs/PRIVACY.md`](docs/PRIVACY.md) — gizlilik
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) · [`SECURITY.md`](SECURITY.md)
 
-## A26 uygulama akışı — 2026-10-31
-- [TESTED / kullanıcı] VoxCut_A26_KonusmaMix_Test.mp4: 10 sn, H.264 + AAC; konuşma, mevcut müzik ve eklenen 660 Hz ton birlikte duyuldu. Bu CLI testidir; GUI kabulüyle karıştırılmamalı.
-- [IMPLEMENTED] inspect_mix_media komutu ile gerçek kaynak süresi ve ses/video akışı kontrolü; yeni kanala kaynak/video süresine göre başlangıç kesiti.
-- [IMPLEMENTED] Sekme değişiminde panel unmount edilmez, oturum içindeki miks ayarları korunur. Kapatıp açınca veya JSON kaydet/aç ile miks geri yükleme henüz yok.
-- [IMPLEMENTED] Dışa aktarma öncesi kesit, fade, seviye ve zamanlama doğrulaması. Çıktıda hem video hem ses akışı kontrolü.
-- [TESTED] TypeScript/Vite build, 7 Vitest testi ve cargo check --offline geçti. Solo/sustur önceliği, yanlış kesit/fade ve video sonunda kesme kararı için 4 yeni test var.
+## Lisans
+
+VoxCut Studio kaynak kodu **MIT** lisanslıdır ([`LICENSE`](LICENSE)). Kurulum paketine gömülen **FFmpeg GPL v3** lisanslıdır; tam metin ve kaynak bilgisi kurulum klasöründeki `licenses\` altındadır ve [`docs/THIRD_PARTY_NOTICES.md`](docs/THIRD_PARTY_NOTICES.md) içinde açıklanmıştır.
+
+> Not: [`CLAUDE.md`](CLAUDE.md) bu projeyi geliştirirken kullanılan yapay zekâ kodlama asistanının çalışma sözleşmesi ve gelişim günlüğüdür; kullanıcılar için gerekli değildir.

@@ -32,7 +32,7 @@ try {
   $bin = Get-ChildItem $work -Directory | ForEach-Object { Join-Path $_.FullName 'bin' } | Where-Object { Test-Path (Join-Path $_ 'ffmpeg.exe') } | Select-Object -First 1
   if (-not $bin) { throw 'Arşivde bin\ffmpeg.exe bulunamadı.' }
   $pkg = Split-Path -Parent $bin
-  if (Test-Path $dest) { Remove-Item $dest -Recurse -Force }
+  if (Test-Path $dest) { Get-ChildItem $dest -Force | Where-Object { $_.Name -ne '.gitkeep' } | Remove-Item -Recurse -Force }
   New-Item -ItemType Directory -Path $dest, $lic -Force | Out-Null
   # ffplay gerekmez; yalnız ffmpeg, ffprobe ve DLL'ler paketlenir.
   Get-ChildItem $bin -File | Where-Object { $_.Name -ne 'ffplay.exe' } | Copy-Item -Destination $dest
