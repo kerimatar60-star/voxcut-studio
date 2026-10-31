@@ -72,3 +72,10 @@ Donanım i7 12. nesil, 16 GB RAM, RTX 3060 (VRAM tespit), SSD. 10 dk 1080p/30 vi
 ## Stres testi kayıtları
 - 2026-10-31 — 10 dk 1080p/30 birleştirme: 61,1 sn, tepe FFmpeg belleği ≈ 1,3 GB, çıktı 478 MB (bkz. CHANGELOG A43). Komut: `cargo test --offline --lib stress_ten_minutes -- --ignored --nocapture` (src-tauri klasöründe). Bellek, ayrı bir PowerShell örnekleyicisiyle (1 sn aralıkla `Get-Process ffmpeg` çalışma kümesi) ölçüldü.
 - Bekleyen: 2 GB medya içe aktarma, >10 ses katmanı, 4K proxy; VRAM raporu (GPU şu an kullanılmıyor).
+
+## Test envanteri güncellemesi — 2026-10-31 (A45–A49)
+- Rust: 80 geçti + 2 yok sayılan (`cargo test --offline`). Yok sayılanlar elle çalıştırılır: `cargo test timeline_stress -- --ignored` (10 dk 1080p) ve `cargo test asr_gercek -- --ignored --nocapture` (ağ + ~157 MB; resmî kaynaktan Whisper motoru/base modeli, SAPI İngilizce konuşma → SRT).
+- Vitest: 162/162, 19 dosya (yeni: `asr.test.ts`, `editCommands.test.ts`).
+- Erişilebilirlik: axe-core 4.14.0 (`npm i -D axe-core`; geliştirme sunucusu `/node_modules/axe-core/axe.min.js` adresinden `<script>` ile yüklenerek) 4 sekmede taranır; hedef: ciddi/kritik ihlal 0 (Tasarım'daki dekoratif minyatür hariç).
+- Kurulum paketi: `npm run desktop:build`; çıktı doğrulaması = dosya boyutu/SHA-256 + release exe'nin 8 sn açık kalıp yanıt vermesi. Kurulum/kaldırma akışı **denenmedi**.
+- Ölçülmemiş: Türkçe konuşma doğruluğu (WER), gerçek müzikte orta kanal ayrımı kalitesi, ekran okuyucu, GUI kabulü.
