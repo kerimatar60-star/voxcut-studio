@@ -33,9 +33,20 @@
             },
     "bundle":  {
                    "active":  true,
+                   "resources":  {
+                                       "resources/ffmpeg/*":  "ffmpeg/",
+                                       "resources/licenses/*":  "licenses/"
+                                   },
                    "targets":  [
                                    "nsis"
                                ],
+                   "shortDescription":  "VoxCut Studio - yerel video, ses ve tasarım stüdyosu",
+                   "windows":  {
+                       "nsis":  {
+                           "languages":  ["Turkish"],
+                           "installMode":  "currentUser"
+                       }
+                   },
                    "icon":  [
                                 "icons/32x32.png",
                                 "icons/128x128.png",

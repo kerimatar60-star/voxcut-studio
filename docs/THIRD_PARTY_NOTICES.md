@@ -18,11 +18,11 @@ Rust bağımlılıklarının tam ve geçişli listesi `src-tauri/Cargo.lock` iç
 
 TypeScript (Apache-2.0), Vite (MIT), Vitest (MIT), `@vitejs/plugin-react` (MIT), `@tauri-apps/cli` (MIT/Apache-2.0), **axe-core (MPL-2.0; yalnız erişilebilirlik taramasında kullanılır)**.
 
-## Pakete GÖMÜLMEYEN, harici çalıştırılan araçlar
+## Harici süreç olarak çalıştırılan araçlar (FFmpeg pakete gömülü; Whisper indirilir)
 
 | Araç | Nasıl kullanılır | Lisans notu |
 |---|---|---|
-| **FFmpeg / FFprobe** | Kullanıcının kendi kurduğu `ffmpeg` ayrı bir süreç olarak çağrılır; VoxCut Studio onu **dağıtmaz**. | Derlemeye bağlıdır: LGPL 2.1+ veya (libx264/libx265 gibi bileşenlerle) **GPL 2+/3**. Uygulama libx264 kullanan bir derleme bekler. FFmpeg'i pakete eklemek istenirse lisans yükümlülükleri (kaynak sunumu, GPL) ayrıca değerlendirilmelidir. |
+| **FFmpeg / FFprobe** | **Kurulum paketine gömülüdür** (BtbN `win64-gpl-shared`, n9.0.2-39-g7adfbe40dc; ayrı süreç olarak çalıştırılır, değiştirilmez). Kullanıcı isterse kendi kurulumunu PATH'e koyabilir. | **GNU GPL v3** (libx264 dahil). Lisans metni: `licenses\FFMPEG-LICENSE.txt`; kaynak ve sürüm bilgisi: `licenses\FFMPEG-NOTICE.txt`. Bu nedenle kurulum paketini dağıtan kişi GPL yükümlülüklerini (lisans metni, kaynak erişimi) sağlamalıdır. |
 | **whisper.cpp** (`ggml-org/whisper.cpp`, sürüm etiketi b5454, `whisper-bin-x64.zip`) | Kullanıcı Altyazı sekmesinde onaylayınca indirilir; uygulama veri klasörüne kurulur. | MIT |
 | **Whisper ggml modelleri** (`ggerganov/whisper.cpp`, Hugging Face) | Kullanıcı seçip onaylayınca indirilir. | OpenAI Whisper ağırlıkları MIT |
 

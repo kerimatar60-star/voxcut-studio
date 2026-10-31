@@ -1,0 +1,19 @@
+FFmpeg — üçüncü taraf bileşen bildirimi (VoxCut Studio ile birlikte dağıtılır)
+
+Bu kurulum paketi, FFmpeg'in resmî Windows derlemelerinden BtbN/FFmpeg-Builds projesinin
+"win64-gpl-shared" derlemesini (ffmpeg.exe, ffprobe.exe ve DLL'ler) içerir.
+
+  Sürüm   : n9.0.2-39-g7adfbe40dc (20261031)
+  Kaynak  : https://github.com/BtbN/FFmpeg-Builds/releases/tag/autobuild-2026-10-31-12-59
+  Dosya   : ffmpeg-n9.0.2-39-g7adfbe40dc-win64-gpl-shared-9.0.zip
+  SHA-256 : 1d9823c35c7a7e2f54d1438cf61030d6efabe3278de01c191309d1e828bb74df
+  Lisans  : GNU GPL v3 (libx264 vb. GPL bileşenleri içerdiği için); tam metin FFMPEG-LICENSE.txt dosyasındadır.
+  Kaynak kodu: FFmpeg ana sitesi https://ffmpeg.org/ ; bu derlemenin kaynağı https://github.com/FFmpeg/FFmpeg
+               (commit 7adfbe40dc) ve derleme betikleri https://github.com/BtbN/FFmpeg-Builds adresindedir.
+               Bu derlemeye dahil edilen tüm GPL kütüphanelerinin kaynak kodunu isteyen herkese, bu paketin
+               yayıncısı üçüncü kişilerin kaynak kodunu aynı adreslerden edinmesine izin verir; ayrıca yayıncıdan
+               yazılı olarak da talep edilebilir.
+
+FFmpeg, FFmpeg geliştiricilerinin ticari markasıdır. VoxCut Studio FFmpeg'i ayrı süreçler olarak (ffmpeg.exe,
+ffprobe.exe) çalıştırır; değiştirmez. Kendi FFmpeg kurulumunuzu kullanmak isterseniz bu klasörü silip sistem
+PATH'ine kendi sürümünüzü koyabilirsiniz (uygulama pakettekini bulamazsa PATH'e bakar).

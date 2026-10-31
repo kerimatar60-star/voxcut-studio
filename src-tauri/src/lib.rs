@@ -101,10 +101,26 @@ fn trim_video(
     Ok(format!("Video kaydedildi: {output_path}"))
 }
 
+/// Kurulum paketindeki FFmpeg klasörünü (varsa) PATH'in BAŞINA ekler; böylece tüm modüllerin `ffmpeg`/`ffprobe` çağrıları
+/// önce pakettekini bulur, yoksa kullanıcının sistem kurulumuna düşer. Klasör yoksa `None` döner (PATH değişmez).
+pub(crate) fn path_with_bundled(resource_dir: &Path, current: Option<std::ffi::OsString>) -> Option<std::ffi::OsString> {
+    let dir = ["ffmpeg", "resources/ffmpeg"].iter().map(|d| resource_dir.join(d)).find(|d| d.join("ffmpeg.exe").is_file() && d.join("ffprobe.exe").is_file())?;
+    let mut parts = vec![dir];
+    if let Some(existing) = current { parts.extend(std::env::split_paths(&existing)); }
+    std::env::join_paths(parts).ok()
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .setup(|app| {
+            use tauri::Manager;
+            if let Ok(dir) = app.path().resource_dir() {
+                if let Some(path) = path_with_bundled(&dir, std::env::var_os("PATH")) { std::env::set_var("PATH", path); }
+            }
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             trim_video, audio_mix::mix_video_audio, audio_mix::inspect_mix_media, project_io::read_project_file, project_io::write_project_file, subtitle_burn::burn_subtitles, library_db::recent_projects_list, library_db::recent_projects_touch, library_db::recent_projects_forget, media_fingerprint::file_fingerprint, media_fingerprint::find_moved_media, media_access::authorize_media, media_access::read_image_bytes, package_io::write_package, package_io::read_package, package_io::list_backups, package_io::restore_backup, package_media::collect_media, export_io::save_export_file, timeline_render::render_timeline, timeline_render::cancel_timeline_render, tool_check::check_tools, waveform::waveform_peaks, audio_denoise::denoise_audio, audio_denoise::denoise_preview_dir, asr::asr_status, asr::asr_install_engine, asr::asr_install_model, asr::asr_transcribe, asr::asr_cancel, audio_center::split_center
         ])
@@ -112,3 +128,31 @@ pub fn run() {
         .expect("VoxCut Studio baslatilamadi");
 }
 
+#[cfg(test)]
+mod bundled_ffmpeg_tests {
+    use super::*;
+    use std::ffi::OsString;
+
+    fn dir(name: &str) -> std::path::PathBuf {
+        let d = std::env::temp_dir().join(format!("voxcut paket ğş {name} {}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        std::fs::create_dir_all(&d).unwrap();
+        d
+    }
+
+    #[test]
+    fn bundled_dir_is_prepended_only_when_both_tools_exist() {
+        let res = dir("var");
+        assert!(path_with_bundled(&res, Some(OsString::from("C:\\Windows"))).is_none(), "klasör yokken PATH değişmemeli");
+        std::fs::create_dir_all(res.join("ffmpeg")).unwrap();
+        std::fs::write(res.join("ffmpeg").join("ffmpeg.exe"), b"x").unwrap();
+        assert!(path_with_bundled(&res, None).is_none(), "ffprobe eksikken eklenmemeli");
+        std::fs::write(res.join("ffmpeg").join("ffprobe.exe"), b"x").unwrap();
+        let joined = path_with_bundled(&res, Some(OsString::from("C:\\Windows;C:\\Tools"))).unwrap();
+        let parts: Vec<_> = std::env::split_paths(&joined).collect();
+        assert_eq!(parts[0], res.join("ffmpeg"));
+        assert_eq!(parts.len(), 3);
+        assert_eq!(parts[1], std::path::PathBuf::from("C:\\Windows"));
+        let _ = std::fs::remove_dir_all(&res);
+    }
+}

@@ -29,3 +29,6 @@ src-tauri/Cargo.toml.backup_*
 src-tauri/Cargo.lock.backup_*
 src-tauri/capabilities/*.backup
 .a*.txt
+
+# Pakete girecek FFmpeg ikilileri scripts/fetch-ffmpeg.ps1 ile indirilir (git'e girmez; lisans metni girer)
+src-tauri/resources/ffmpeg/

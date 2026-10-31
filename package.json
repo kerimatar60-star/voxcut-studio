@@ -12,7 +12,8 @@
     "test": "vitest run",
     "tauri": "tauri",
     "desktop:dev": "tauri dev",
-    "desktop:build": "tauri build"
+    "fetch:ffmpeg": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/fetch-ffmpeg.ps1",
+    "desktop:build": "npm run fetch:ffmpeg && tauri build"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",
