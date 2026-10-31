@@ -92,7 +92,7 @@
 
 **Bitti kriteri:** Yazılı komutu kurgu modeline çevir, diff/ön izleme göster, kullanıcı onayıyla çalıştır, geri al; 4K proxy timeline akıcı.
 
-## A9 — Yayına hazırlık | P0 | PLAN
+## A9 — Yayına hazırlık | KISMEN (kurulum paketi + erişilebilirlik taraması + belgeler tamam; kalanlar A49 sonunda)
 
 - [ ] E2E UI, Windows smoke, veri kurtarma, büyük medya, performans testleri.
 - [ ] Erişilebilirlik: klavye/focus, ekran okuyucu, kontrast; Türkçe metinler.
@@ -346,3 +346,12 @@ Her aşamayı PR/commit, ekran görüntüsü veya test çıktısı, tamamlanan i
 - **Dürüst sınırlar:** gerçek müzikte vokal her zaman ortada değildir; bas ve bas davul da ortadadır (vokal azaltılırken onlar da azalır); yankı/geniş stereo vokal kalır; `center` kipi yalnız tek kanaldaki sesi **yarıya (−6 dB)** indirir, yok etmez. Gerçek bir müzik kaydında dinleyerek kalite ölçülmedi (elde izinli bir müzik dosyası yok).
 - **YAPAY ZEKÂ AYRIŞTIRMA (vokal/davul/bas/diğer) YAPILMADI — [PLAN] olarak kalır.** Nedenleri: (1) onaylı lisanslı, indirilebilir ve doğrulanabilir bir ONNX modeli seçilmedi (UVR/MDX-Net ağırlıklarının lisansı belirsiz; Demucs arşivlenmiş), (2) Rust tarafında ONNX Runtime bağımlılığı (`ort`) ve STFT/ISTFT işlemi ayrı, doğrulanması gereken bir iş, (3) sonuç kalitesini ölçecek izinli müzik örneği yok. Sonraki adım: model + lisans kararı → `ort` entegrasyonu → sentetik + gerçek örnekle ölçüm.
 - Arayüzdeki "Geçişler ve efektler — Planlandı" kilidi artık yanlıştı (geçişler A44'te yapıldı); "Keyframe animasyon ve efektler" olarak düzeltildi, enstrüman ayrıştırma kilidi "Yapay zekâ ile" diye netleştirildi.
+
+## A49 — 2026-10-31 A9: kurulum paketi, sürüm doğrulaması ve proje durumu
+- [TESTED / ben] `npm run desktop:build` (release, çevrimdışı Cargo) → **NSIS kurulum paketi üretildi**: `src-tauri/target/release/bundle/nsis/VoxCut Studio_0.1.0_x64-setup.exe`, 3 224 498 bayt, SHA-256 `a02c46a7429ed05c970a452a76e79fbb7cd0e6b654c83ab3c992ae428e6541b8`. Tauri, paketleme için resmî NSIS 3.13 ve `nsis_tauri_utils` araçlarını `tauri-apps` GitHub sürümlerinden indirdi (günlük: `test-output/desktop_build*.log`, yerelde kalır).
+- [TESTED / ben] Release `voxcut-studio.exe` 8 sn açık kaldı: pencere başlığı "VoxCut Studio", yanıt veriyor, ≈34 MB çalışma kümesi, WebView2 çalışıyor; sonra kapatıldı.
+- **Kurulum paketi bu makineye KURULMADI** (sistem değişikliği): kurulum/kaldırma akışı, masaüstü kısayolu, `.voxcut` dosya ilişkisi ve FFmpeg'in PATH'te olmaması durumundaki açılış davranışı denenmedi. Paket **imzasız**: Windows SmartScreen uyarısı verir. İmzalama için kod imzalama sertifikası (satın alma/karar) ve `tauri.conf.json` içinde `signCommand` gerekir — kullanıcı kararı.
+- **FFmpeg pakete gömülmez** (GPL/libx264, bkz. `docs/THIRD_PARTY_NOTICES.md`): kurulumdan sonra kullanıcının `ffmpeg` ve `ffprobe`'u PATH'te bulundurması gerekir; uygulama açılışta eksikleri denetleyip uyarır (A-tool_check).
+- Depo bakımı: bu oturumdaki otomatik betik düzenlemeleri bazı dosyalarda satır sonlarını (CRLF/LF) değiştirmişti; özgün satır sonları geri yüklendi, sürümler arası fark artık yalnız gerçek değişikliği gösterir.
+- **Doğrulama özeti (bu sürümde çalıştırıldı):** Rust 80 geçti + 2 yok sayılan (10 dk 1080p stres testi ve gerçek ağ/Whisper testi elle çalıştırılır), clippy 0 uyarı, Vitest 162/162 (19 dosya), `npm run build` temiz, axe-core: Video/Ses/Altyazı sekmeleri 0 ihlal (Tasarım'da 1 dekoratif minyatür).
+- **Hâlâ yapılmadı / ölçülmedi (A9 kapsamı dahil):** kullanıcı eliyle tam GUI kabulü, ekran okuyucu ve klavye-yalnız testi, i18n altyazı katmanı (İngilizce), zip paketi, Rust/npm lisans taraması, yapay zekâ stem ayrıştırma, 4K proxy, çoklu seçim/kılavuz çizgileri/görsel kırpma (A2 artıkları), 2 GB medya içe aktarma ve >10 ses katmanı stres testleri, keyframe animasyon, imzalama ve otomatik güncelleme.
