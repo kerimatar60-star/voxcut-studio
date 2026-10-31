@@ -9,7 +9,7 @@ Hesap yok, abonelik yok, bulut yok: dosyalarınız bilgisayarınızda kalır.
 
 ## İndirme ve kurulum
 
-1. [Releases](../../releases) sayfasından `VoxCut Studio_..._x64-setup.exe` dosyasını indirin. Windows 10/11 (64 bit).
+1. [Releases](../../releases) sayfasından `VoxCut.Studio_..._x64-setup.exe` dosyasını indirin (GitHub dosya adındaki boşlukları nokta yapar). Windows 10/11 (64 bit).
 2. Çalıştırın. Yönetici izni gerekmez; kullanıcı klasörünüze kurulur.
 3. **İmzasız:** Windows SmartScreen "bilinmeyen yayıncı" uyarısı verebilir. *Daha fazla bilgi → Yine de çalıştır*. Dosyanın bütünlüğünü Release notundaki SHA-256 ile karşılaştırabilirsiniz.
 4. FFmpeg setup içinde gelir; ayrıca kurmanız gerekmez.

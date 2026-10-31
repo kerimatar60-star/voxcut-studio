@@ -6,11 +6,11 @@
 
 ## İndirme
 
-`VoxCut Studio_0.1.0_x64-setup.exe` (≈ 55 MB). Yönetici izni gerekmez.
+`VoxCut.Studio_0.1.0_x64-setup.exe` (≈ 55 MB). Yönetici izni gerekmez.
 
 **SHA-256:** `4204a08bf315e922f17a8c1cef1dce600b6fa3a48c37d7efd77f6a1501ca1703`
 
-PowerShell ile kontrol: `Get-FileHash "VoxCut Studio_0.1.0_x64-setup.exe"`
+PowerShell ile kontrol: `Get-FileHash "VoxCut.Studio_0.1.0_x64-setup.exe"`
 
 > ⚠️ **İmzasız:** Windows SmartScreen uyarı verebilir → *Daha fazla bilgi → Yine de çalıştır*. Dosyayı yalnız bu sayfadan indirin ve özetini karşılaştırın.
 >
