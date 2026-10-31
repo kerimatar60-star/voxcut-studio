@@ -44,3 +44,8 @@ Ui AI Dialog -> Local Job Queue -> Validation -> Model Registry -> Worker Adapte
 3. CPU fallback 16 GB RAM altında aşırı swap/çökme olmadan çalışmalı; VRAM hatası kullanıcıya açıklanmalı.
 4. Üretilen stem'ler eşit süre/uygun örnekleme frekansında olmalı; WAV tekrar oynatılmalı.
 5. ASR metni **düzenlenebilir** olmalı; onaylanmadan videonun içine kalıcı yazılmamalı.
+
+## Ölçülen donanım (2026-10-31, geliştirme makinesi)
+- CPU: Intel Core i7-12700H (14 çekirdek / 20 iş parçacığı), RAM 15,7 GB, GPU: NVIDIA GeForce RTX 3060 Laptop — **VRAM 6144 MiB (6 GB)** (`nvidia-smi` ile ölçüldü; CLAUDE.md'nin istediği gibi varsayılmadı).
+- Sonuç: GPU belleği 6 GB'tır; vokal/enstrüman ayrıştırma ve Whisper modelleri bu bütçeye göre seçilmeli (büyük modeller için parça/segment kullanımı ve CPU yedeği). NVENC bu sürücüyle uyumsuz bulunduğu için video kodlama CPU / libx264'tür.
+- Model indirme, bu belgedeki seçimlerden biri kullanıcı onayıyla yapılmadan başlamaz.

@@ -237,6 +237,35 @@ mod tests {
         let _ = fs::remove_dir_all(&d);
     }
 
+    /// Stres testi (CLAUDE.md §6): 10 dk 1080p/30 birleştirme. Yavaştır; yalnız elle çalıştırılır:
+    /// `cargo test --offline --lib stress_ten_minutes -- --ignored --nocapture`
+    #[test]
+    #[ignore = "uzun sürer (dakikalar); elle çalıştırılır"]
+    fn stress_ten_minutes_1080p_timeline() {
+        if !ffmpeg_ok() { return; }
+        let d = dir("stres");
+        let started = std::time::Instant::now();
+        let mut clips: Vec<Clip> = Vec::new();
+        for i in 0..3 {
+            let p = d.join(format!("klip {i}.mp4"));
+            let out = Command::new("ffmpeg").args(["-hide_banner", "-nostdin", "-y", "-f", "lavfi", "-i", "testsrc2=size=1920x1080:rate=30:duration=200", "-f", "lavfi", "-i", "sine=frequency=440:duration=200", "-c:v", "libx264", "-preset", "ultrafast", "-crf", "28", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest"]).arg(&p).output().unwrap();
+            assert!(out.status.success());
+            clips.push((p.to_string_lossy().into(), 0.0, 200.0));
+        }
+        println!("STRES fixture süresi: {:.1} sn", started.elapsed().as_secs_f64());
+        let out = d.join("stres.mp4");
+        let t = std::time::Instant::now();
+        let mut last = 0.0;
+        let msg = render(&clips, out.to_str().unwrap(), 1920, 1080, 30, &AtomicBool::new(false), &mut |p| last = p).unwrap();
+        let secs = t.elapsed().as_secs_f64();
+        let (duration, audio, video) = probe(out.to_str().unwrap()).unwrap();
+        let size_mb = fs::metadata(&out).unwrap().len() as f64 / 1_048_576.0;
+        println!("STRES sonuç: {msg}");
+        println!("STRES render süresi: {secs:.1} sn ({:.2}× gerçek zamanlı), çıktı {duration:.1} sn, {size_mb:.1} MB, son ilerleme %{last}", duration / secs);
+        assert!(audio && video && (duration - 600.0).abs() < 1.5);
+        let _ = fs::remove_dir_all(&d);
+    }
+
     #[test]
     fn filter_graph_pads_silent_clips_and_concats_all_in_order() {
         let g = filter_graph(&[("a".into(), 0.0, 2.0), ("b".into(), 1.0, 3.5)], &[true, false], 1280, 720, 30);

@@ -68,3 +68,7 @@ Donanım i7 12. nesil, 16 GB RAM, RTX 3060 (VRAM tespit), SSD. 10 dk 1080p/30 vi
 - Açılış duman testi: exe başlatılır, pencere başlığı "VoxCut Studio", `library.db` oluşur, WebView2 çalışır, süreç kapatılır.
 - Tarayıcı modu (Vite önizleme, gerçek arayüz): tasarım, geri al/yinele, altyazı, medya, eski proje JSON'u.
 - ELLE (GUI) KABUL BEKLEYENLER: dosya/klasör diyalogları, gerçek video-ses oynatma (asset protokolü), paket kaydet/aç/taşı, medya kopyalama onayı, otomatik kayıt döngüsü, altyazı yakılan MP4'ün oynatılması.
+
+## Stres testi kayıtları
+- 2026-10-31 — 10 dk 1080p/30 birleştirme: 61,1 sn, tepe FFmpeg belleği ≈ 1,3 GB, çıktı 478 MB (bkz. CHANGELOG A43). Komut: `cargo test --offline --lib stress_ten_minutes -- --ignored --nocapture` (src-tauri klasöründe). Bellek, ayrı bir PowerShell örnekleyicisiyle (1 sn aralıkla `Get-Process ffmpeg` çalışma kümesi) ölçüldü.
+- Bekleyen: 2 GB medya içe aktarma, >10 ses katmanı, 4K proxy; VRAM raporu (GPU şu an kullanılmıyor).
