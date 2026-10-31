@@ -31,8 +31,10 @@ export function resolvePortablePath(path: string, packageDir: string): string {
 /** Projedeki tüm medya yollarına (kütüphane + ses miksi) bir dönüşüm uygular. */
 export function mapProjectPaths(doc: ProjectDocument, fn: (path: string) => string): ProjectDocument {
   const mix = doc.audioMix;
+  const timeline = doc.timeline;
   return {
     ...doc,
+    ...(timeline ? { timeline: { ...timeline, clips: timeline.clips.map(c => ({ ...c, path: fn(c.path) })) } } : {}),
     assets: doc.assets.map(a => (a.path ? { ...a, path: fn(a.path) } : a)),
     ...(mix ? { audioMix: { ...mix, videoPath: mix.videoPath ? fn(mix.videoPath) : mix.videoPath, tracks: mix.tracks.map(t => ({ ...t, path: fn(t.path) })) } } : {}),
   };
@@ -46,7 +48,7 @@ export function projectMediaPaths(doc: ProjectDocument): string[] {
 export const toPortableProject =(doc: ProjectDocument, packageDir: string) => mapProjectPaths(doc, p => toPortablePath(p, packageDir));
 export const fromPortableProject = (doc: ProjectDocument, packageDir: string) => mapProjectPaths(doc, p => resolvePortablePath(p, packageDir));
 
-export type ManifestMedia = { role: 'asset' | 'mix-video' | 'mix-track'; name: string; path: string; portable: boolean; size?: number; fingerprint?: string };
+export type ManifestMedia = { role: 'asset' | 'mix-video' | 'mix-track' | 'timeline-clip'; name: string; path: string; portable: boolean; size?: number; fingerprint?: string };
 export type PackageManifest = { format: 'voxcut-package'; formatVersion: 1; app: string; savedAt: number; projectFile: 'project.json'; name: string; media: ManifestMedia[] };
 
 /** Bilgilendirici manifest: hangi medya, nerede, taşınabilir mi (göreli) ve parmak izi. `stored` paketin içine yazılacak (göreli yollu) proje olmalı. */
@@ -56,5 +58,6 @@ export function buildManifest(stored: ProjectDocument, savedAt: number): Package
   const mix = stored.audioMix;
   if (mix?.videoPath) media.push({ role: 'mix-video', name: baseName(mix.videoPath), path: mix.videoPath, portable: !isAbsolutePath(mix.videoPath), size: mix.videoSize, fingerprint: mix.videoFingerprint });
   for (const t of mix?.tracks ?? []) media.push({ role: 'mix-track', name: baseName(t.path), path: t.path, portable: !isAbsolutePath(t.path), size: t.size, fingerprint: t.fingerprint });
+  for (const c of stored.timeline?.clips ?? []) media.push({ role: 'timeline-clip', name: baseName(c.path), path: c.path, portable: !isAbsolutePath(c.path), size: c.size, fingerprint: c.fingerprint });
   return { format: 'voxcut-package', formatVersion: 1, app: 'VoxCut Studio', savedAt, projectFile: 'project.json', name: stored.name, media };
 }

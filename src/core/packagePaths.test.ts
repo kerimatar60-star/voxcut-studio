@@ -111,3 +111,27 @@ describe('manifest', () => {
     expect(buildManifest({ ...exampleProject(), assets: [] }, 1).media).toEqual([]);
   });
 });
+
+describe('zaman çizelgesi klipleri paket yollarına dahil', () => {
+  const withTimeline = (): ProjectDocument => ({
+    ...exampleProject(),
+    timeline: { width: 1280, height: 720, fps: 30, clips: [
+      { id: 'c1', path: `${DIR}\\media\\k1.mp4`, in: 0, out: 2, sourceDuration: 5, size: 7, fingerprint: FP },
+      { id: 'c2', path: 'E:\\Klipler\\k2.mp4', in: 1, out: 3, sourceDuration: 4 },
+    ] },
+  });
+  it('projectMediaPaths, göreli/mutlak dönüşüm ve manifest klipleri kapsar', () => {
+    expect(projectMediaPaths(withTimeline())).toEqual([`${DIR}\\media\\k1.mp4`, 'E:\\Klipler\\k2.mp4']);
+    const stored = toPortableProject(withTimeline(), DIR);
+    expect(stored.timeline?.clips.map(c => c.path)).toEqual(['media/k1.mp4', 'E:\\Klipler\\k2.mp4']);
+    const back = fromPortableProject(parseProject(JSON.parse(serializeProject(stored))), 'G:\\Yeni.voxcut');
+    expect(back.timeline?.clips[0]).toMatchObject({ path: 'G:\\Yeni.voxcut\\media\\k1.mp4', in: 0, out: 2, fingerprint: FP });
+    const manifest = buildManifest(stored, 1);
+    expect(manifest.media.map(m => [m.role, m.portable])).toEqual([['timeline-clip', true], ['timeline-clip', false]]);
+  });
+  it('eski proje (çizelge yok) etkilenmez', () => {
+    const doc = { ...exampleProject(), assets: [] };
+    expect('timeline' in toPortableProject(doc, DIR)).toBe(false);
+    expect(parseProject(JSON.parse(serializeProject(doc))).timeline).toBeUndefined();
+  });
+});

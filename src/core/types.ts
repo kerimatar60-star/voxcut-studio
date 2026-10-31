@@ -1,4 +1,5 @@
 import type { AudioMixState } from './audioMixModel';
+import type { TimelineState } from './timelineModel';
 
 export type Workspace = 'design' | 'video' | 'audio' | 'subtitles';
 export type AssetKind = 'image' | 'video' | 'audio';
@@ -55,6 +56,8 @@ export type ProjectDocument = {
   subtitles: SubtitleCue[];
   /** Yalnız dosya yolları + kanal ayarları; eski projelerde yoktur. */
   audioMix?: AudioMixState;
+  /** Video zaman çizelgesi (yalnız kesit ayarları + dosya yolları); eski projelerde yoktur. */
+  timeline?: TimelineState;
 };
 
 /** Proje değişikliklerinin tek giriş noktası; updatedAt otomatik güncellenir. */

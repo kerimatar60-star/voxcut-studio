@@ -5,6 +5,8 @@ import {exampleProject} from './core/project';
 import {exportDesign} from './core/designExport';
 import type {ExportFormat} from './core/designExport';
 import {emptyAudioMix} from './core/audioMixModel';
+import {emptyTimeline} from './core/timelineModel';
+import type {TimelineState} from './core/timelineModel';
 import type {AudioMixState} from './core/audioMixModel';
 import type {MediaAsset,ProjectDocument,UpdateProject,Workspace} from './core/types';
 import {measureImage} from './core/imageSize';
@@ -35,7 +37,9 @@ export default function App(){
   const [audioVolume,setAudioVolume]=useState(0.8);
   const [currentTime,setCurrentTime]=useState(0);
   const [mixLoadToken,setMixLoadToken]=useState(0);
+  const [timelineLoadToken,setTimelineLoadToken]=useState(0);
   const update:UpdateProject=fn=>setProject(p=>({...fn(p),updatedAt:Date.now()}));
+  const changeTimeline=useCallback((fn:(t:TimelineState)=>TimelineState)=>setProject(p=>({...p,timeline:fn(p.timeline??emptyTimeline()),updatedAt:Date.now()})),[]);
   const changeMix=useCallback((fn:(m:AudioMixState)=>AudioMixState)=>setProject(p=>({...p,audioMix:fn(p.audioMix??emptyAudioMix()),updatedAt:Date.now()})),[]);
 
   const history=useProjectHistory(project,setProject);
@@ -47,8 +51,10 @@ export default function App(){
     onLoaded:parsed=>{
       media.clearSession();setSelectedElement(null);void media.verifyAssets(parsed.assets);
       const hasMix=!!parsed.audioMix&&(!!parsed.audioMix.videoPath||parsed.audioMix.tracks.length>0);
-      if(hasMix){setMixLoadToken(t=>t+1);setWorkspace('audio');}
-      setNotice(hasMix?'Proje açıldı. Ses miksi yüklendi; dosyalar yeniden doğrulanıyor (Ses sekmesi).':'Proje açıldı. Medya kütüphanesi dosyalarının tekrar eklenmesi gerekir.');
+      const hasTimeline=(parsed.timeline?.clips.length??0)>0;
+      if(hasTimeline){setTimelineLoadToken(t=>t+1);}
+      if(hasMix){setMixLoadToken(t=>t+1);setWorkspace('audio');}else if(hasTimeline){setWorkspace('video');}
+      setNotice(hasMix?'Proje açıldı. Ses miksi yüklendi; dosyalar yeniden doğrulanıyor (Ses sekmesi).':hasTimeline?'Proje açıldı. Video klipleri yüklendi; dosyalar yeniden doğrulanıyor (Video sekmesi).':'Proje açıldı. Medya kütüphanesi dosyalarının tekrar eklenmesi gerekir.');
     },
   });
 
@@ -114,14 +120,14 @@ export default function App(){
           <Timeline workspace={workspace} project={project} selectedElement={selectedElement} onSelectElement={setSelectedElement} onSelectAsset={media.setSelectedAsset} onOpenSubtitles={()=>setWorkspace('subtitles')}/>
         </section>
 
-        <aside className={`panel properties ${workspace === 'audio' ? 'vc-audio-properties' : ''}`}>
+        <aside className={`panel properties ${workspace === 'audio' || workspace === 'video' ? 'vc-audio-properties' : ''}`}>
           <div className="panel-heading"><div><span className="eyebrow">DÜZENLE</span><h2>Özellikler</h2></div><Settings2 size={18} className="muted-icon"/></div>
           <div className="vc-mix-container" hidden={workspace!=='audio'}><AudioMixPanel mix={project.audioMix??emptyAudioMix()} onChange={changeMix} loadToken={mixLoadToken}/></div>
           {workspace==='design'
             ?<DesignProperties element={element} changeElement={design.changeElement} removeElement={design.removeElement} onMove={design.moveSelected} onDuplicate={design.duplicateSelected} onAlign={design.alignSelected}/>
             :workspace==='subtitles'
               ?<CueList cues={project.subtitles} onUpdate={subs.updateCue} onRemove={subs.removeCue} onAdd={subs.addCue} onExportSrt={subs.exportSrt}/>
-              :<MediaProperties workspace={workspace} asset={asset} videoVolume={videoVolume} audioVolume={audioVolume} setVideoVolume={setVideoVolume} setAudioVolume={setAudioVolume}/>}
+              :<MediaProperties workspace={workspace} asset={asset} videoVolume={videoVolume} audioVolume={audioVolume} setVideoVolume={setVideoVolume} setAudioVolume={setAudioVolume} timeline={project.timeline??emptyTimeline()} onTimelineChange={changeTimeline} timelineLoadToken={timelineLoadToken}/>}
           <div className="properties-footer"><WandSparkles size={15}/> AI modelleri isteğe bağlı kurulacak.</div>
         </aside>
       </div>

@@ -2,6 +2,7 @@ import type { DesignElement, MediaAsset, ProjectDocument, SubtitleCue } from './
 
 import { parseAudioMix, printOf } from './audioMixModel';
 import { isFontFamily } from './designText';
+import { parseTimeline } from './timelineModel';
 
 const now = () => Date.now();
 export const newId = () => crypto.randomUUID();
@@ -73,10 +74,12 @@ export function parseProject(input: unknown): ProjectDocument {
     return {id:String(c.id).slice(0,120),start,end,text:String(c.text).slice(0,2000)};
   });
   const audioMix=parseAudioMix(value.audioMix);
+  const timeline=parseTimeline(value.timeline);
   return {
     schemaVersion:1,id:String(value.id ?? newId()).slice(0,120),name:value.name.slice(0,200),createdAt:Number(value.createdAt)||now(),updatedAt:now(),
     design:{width,height,background:design.background.slice(0,80),elements},assets,subtitles,
-    ...(audioMix?{audioMix}:{})
+    ...(audioMix?{audioMix}:{}),
+    ...(timeline?{timeline}:{})
   };
 }
 export function downloadFile(blob: Blob, filename: string) {
