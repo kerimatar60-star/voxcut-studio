@@ -283,3 +283,8 @@
 ## A53 — 2026-11-01 Türkçe büyük harf noktaları (Ö, İ, Ü) kırpılıyordu
 - [DÜZELTME] Tasarım metin katmanında kutu üst kenarı harfleri kesiyordu: "ÖZELLİK" gibi yazılarda Ö/Ü/İ noktaları görünmüyordu (önizleme ve dışa aktarma). Metin katmanı artık yalnız üstte `TEXT_TOP_BLEED` (0,3 em) pay bırakır; sol/sağ/alt kenarlarda kutuya kırpma aynen sürer.
 - [TESTED] `npm test` 165/165 (yeni `elementStyle.test.ts` 3 test); `npm run build` temiz. Düzeltme, tanıtım görselleri üretilirken gerçek çıktıda fark edildi; düzeltilmiş çıktı gözle kontrol edildi (Ö ve İ noktaları görünüyor).
+
+## A54 — 2026-11-01 sürüm 0.1.1 (alfa)
+- [IMPLEMENTED] Sürüm 0.1.0 → 0.1.1 (`package.json`, `Cargo.toml`/`Cargo.lock`, `tauri.conf.json`, `package-lock.json`). İçerik: yalnız A53 düzeltmesi (Ö/İ/Ü noktaları).
+- [TESTED / ben] `npm run desktop:build` (çevrimdışı Cargo) → `VoxCut Studio_0.1.1_x64-setup.exe`, 57 913 528 bayt (55,23 MiB), SHA-256 `5b329f6f835df79484c1e517902996c4780514e6aff09c6f8fbf77f07c63bac4`. Paketlenen arayüz kodunda yeni kırpma payı (`inset(-…em 0 0 0)`) var. Release exe 8 sn açık kaldı: pencere "VoxCut Studio", yanıt veriyor, ≈24 MB.
+- [PENDING] Bu kurulum dosyası bu makineye kurulmadı (0.1.0 için yapılan kurulum/kaldırma denemesi 0.1.1 için tekrarlanmadı) ve GitHub Release'e yüklenmedi. Sürüm notu: `docs/RELEASE_NOTES_0.1.1-alpha.md`.
