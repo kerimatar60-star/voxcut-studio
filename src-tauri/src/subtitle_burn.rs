@@ -4,15 +4,31 @@ use crate::audio_mix::probe;
 
 const MAX_SRT_BYTES: usize = 1_000_000;
 
+/// Altyazı görünümü (hepsi beyaz liste ile doğrulanır): yazı tipi, kalın, kontur kalınlığı ve yarı saydam arka plan kutusu.
+#[derive(Debug, Clone)]
+struct Look { font: String, bold: bool, outline: f64, boxed: bool }
+
+impl Default for Look {
+    fn default() -> Self { Look { font: "Arial".into(), bold: false, outline: 1.5, boxed: false } }
+}
+
+/// Yalnız Windows'ta hazır gelen sistem yazı tipleri (uygulamaya yazı tipi dosyası gömülmez; tasarım editöründeki liste ile aynı).
+const FONTS: [&str; 9] = ["Arial", "Segoe UI", "Verdana", "Tahoma", "Trebuchet MS", "Georgia", "Times New Roman", "Impact", "Courier New"];
+
 /// Yalnız beyaz listedeki değerlerden libass stili üretir; arayüzden ham stil metni kabul edilmez.
 /// `size_percent`: yazı boyutu, video yüksekliğinin yüzdesi. libass SRT için 288 birimlik sanal yükseklik kullanır.
-fn force_style(size_percent: f64, position: &str, color: &str) -> Result<String, String> {
+fn force_style(size_percent: f64, position: &str, color: &str, look: &Look) -> Result<String, String> {
     if !size_percent.is_finite() || !(2.0..=12.0).contains(&size_percent) { return Err("Yazı boyutu %2 ile %12 arasında olmalı.".into()); }
     let alignment = match position { "bottom" => 2, "middle" => 5, "top" => 8, _ => return Err("Geçersiz altyazı konumu.".into()) };
-    let primary = match color { "white" => "&H00FFFFFF", "yellow" => "&H0000FFFF", _ => return Err("Geçersiz altyazı rengi.".into()) };
+    let primary = match color { "white" => "&H00FFFFFF", "yellow" => "&H0000FFFF", "cyan" => "&H00FFFF00", "green" => "&H0000FF00", _ => return Err("Geçersiz altyazı rengi.".into()) };
+    if !FONTS.contains(&look.font.as_str()) { return Err("Desteklenmeyen yazı tipi.".into()); }
+    if !look.outline.is_finite() || !(0.0..=6.0).contains(&look.outline) { return Err("Kontur kalınlığı 0 ile 6 arasında olmalı.".into()); }
     let font_size = size_percent * 2.88;
     let margin = if position == "middle" { 0.0 } else { 3.0 * 2.88 };
-    Ok(format!("FontName=Arial,FontSize={font_size:.2},PrimaryColour={primary},OutlineColour=&H00000000,BorderStyle=1,Outline=1.5,Shadow=0,Alignment={alignment},MarginV={margin:.1}"))
+    let bold = if look.bold { -1 } else { 0 };
+    // Kutu modunda (BorderStyle=3) kutu rengi ve dolgu payı Outline alanlarından gelir; yarı saydam siyah.
+    let (border_style, outline, outline_colour, back_colour) = if look.boxed { (3, 3.0, "&H59000000", "&H59000000") } else { (1, look.outline, "&H00000000", "&H00000000") };
+    Ok(format!("FontName={},FontSize={font_size:.2},Bold={bold},PrimaryColour={primary},OutlineColour={outline_colour},BackColour={back_colour},BorderStyle={border_style},Outline={outline:.1},Shadow=0,Alignment={alignment},MarginV={margin:.1}", look.font))
 }
 
 /// SRT içeriğini doğrular ve ipucu olarak cue sayısını döndürür.
@@ -24,11 +40,11 @@ fn validate_srt(srt: &str) -> Result<usize, String> {
     Ok(cues)
 }
 
-fn render(input: String, output: String, srt: String, size_percent: f64, position: String, color: String) -> Result<String, String> {
+fn render(input: String, output: String, srt: String, size_percent: f64, position: String, color: String, look: Look) -> Result<String, String> {
     let source = Path::new(&input);
     if !source.is_absolute() || !source.is_file() { return Err("Kaynak video bulunamadı.".into()); }
     let cues = validate_srt(&srt)?;
-    let style = force_style(size_percent, &position, &color)?;
+    let style = force_style(size_percent, &position, &color, &look)?;
     let target = Path::new(&output);
     if target.exists() || target.extension().and_then(|e| e.to_str()).is_none_or(|e| !e.eq_ignore_ascii_case("mp4")) { return Err("Yeni bir MP4 dosya adı seçin; mevcut dosyalar korunur.".into()); }
     if output.to_lowercase() == input.to_lowercase() { return Err("Kaynak video ile hedef dosya aynı olamaz.".into()); }
@@ -62,8 +78,10 @@ fn render(input: String, output: String, srt: String, size_percent: f64, positio
 }
 
 #[tauri::command]
-pub async fn burn_subtitles(input_path: String, output_path: String, srt: String, size_percent: f64, position: String, color: String) -> Result<String, String> {
-    tauri::async_runtime::spawn_blocking(move || render(input_path, output_path, srt, size_percent, position, color)).await.map_err(|e| e.to_string())?
+pub async fn burn_subtitles(input_path: String, output_path: String, srt: String, size_percent: f64, position: String, color: String, font: Option<String>, bold: Option<bool>, outline: Option<f64>, boxed: Option<bool>) -> Result<String, String> {
+    let defaults = Look::default();
+    let look = Look { font: font.unwrap_or(defaults.font), bold: bold.unwrap_or(defaults.bold), outline: outline.unwrap_or(defaults.outline), boxed: boxed.unwrap_or(defaults.boxed) };
+    tauri::async_runtime::spawn_blocking(move || render(input_path, output_path, srt, size_percent, position, color, look)).await.map_err(|e| e.to_string())?
 }
 
 #[cfg(test)]
@@ -72,19 +90,36 @@ mod tests {
 
     #[test]
     fn style_uses_only_whitelisted_values() {
-        let s = force_style(5.0, "bottom", "white").unwrap();
-        assert!(s.contains("FontSize=14.40") && s.contains("Alignment=2") && s.contains("&H00FFFFFF"));
-        assert!(force_style(5.0, "top", "yellow").unwrap().contains("Alignment=8"));
-        assert!(force_style(5.0, "middle", "white").unwrap().contains("MarginV=0.0"));
+        let d = Look::default();
+        let s = force_style(5.0, "bottom", "white", &d).unwrap();
+        assert!(s.contains("FontName=Arial") && s.contains("FontSize=14.40") && s.contains("Alignment=2") && s.contains("&H00FFFFFF") && s.contains("BorderStyle=1") && s.contains("Bold=0"));
+        assert!(force_style(5.0, "top", "yellow", &d).unwrap().contains("Alignment=8"));
+        assert!(force_style(5.0, "middle", "white", &d).unwrap().contains("MarginV=0.0"));
+        assert!(force_style(5.0, "bottom", "cyan", &d).unwrap().contains("PrimaryColour=&H00FFFF00"));
+        assert!(force_style(5.0, "bottom", "green", &d).unwrap().contains("PrimaryColour=&H0000FF00"));
+    }
+
+    #[test]
+    fn style_look_options_are_applied_and_validated() {
+        let bold_serif = Look { font: "Georgia".into(), bold: true, outline: 3.0, boxed: false };
+        let s = force_style(5.0, "bottom", "white", &bold_serif).unwrap();
+        assert!(s.contains("FontName=Georgia") && s.contains("Bold=-1") && s.contains("Outline=3.0") && s.contains("BorderStyle=1"));
+        let boxed = Look { boxed: true, ..Look::default() };
+        let b = force_style(5.0, "bottom", "white", &boxed).unwrap();
+        assert!(b.contains("BorderStyle=3") && b.contains("OutlineColour=&H59000000") && b.contains("BackColour=&H59000000"));
+        for bad in [Look { font: "Evil,Outline=99".into(), ..Look::default() }, Look { font: "Comic Sans".into(), ..Look::default() }, Look { outline: -1.0, ..Look::default() }, Look { outline: 7.0, ..Look::default() }, Look { outline: f64::NAN, ..Look::default() }] {
+            assert!(force_style(5.0, "bottom", "white", &bad).is_err(), "{bad:?}");
+        }
     }
 
     #[test]
     fn style_rejects_injection_and_out_of_range() {
-        assert!(force_style(5.0, "bottom,Outline=99", "white").is_err());
-        assert!(force_style(5.0, "bottom", "red'];x").is_err());
-        assert!(force_style(1.0, "bottom", "white").is_err());
-        assert!(force_style(13.0, "bottom", "white").is_err());
-        assert!(force_style(f64::NAN, "bottom", "white").is_err());
+        let d = Look::default();
+        assert!(force_style(5.0, "bottom,Outline=99", "white", &d).is_err());
+        assert!(force_style(5.0, "bottom", "red'];x", &d).is_err());
+        assert!(force_style(1.0, "bottom", "white", &d).is_err());
+        assert!(force_style(13.0, "bottom", "white", &d).is_err());
+        assert!(force_style(f64::NAN, "bottom", "white", &d).is_err());
     }
 
     #[test]
@@ -108,19 +143,50 @@ mod tests {
         assert!(made.status.success(), "fixture üretilemedi");
         let output = dir.join("çıktı.mp4");
         let srt = "1\n00:00:00,500 --> 00:00:02,000\nTürkçe İğŞ altyazı\n";
-        let msg = render(input.to_str().unwrap().into(), output.to_str().unwrap().into(), srt.into(), 6.0, "top".into(), "yellow".into()).unwrap();
+        let msg = render(input.to_str().unwrap().into(), output.to_str().unwrap().into(), srt.into(), 6.0, "top".into(), "yellow".into(), Look::default()).unwrap();
         assert!(msg.contains("1 altyazı"), "{msg}");
         let (d, a, v) = probe(output.to_str().unwrap()).unwrap();
         assert!(a && v && (d - 3.0).abs() < 0.25, "süre/akış hatalı: {d} {a} {v}");
-        let again = render(input.to_str().unwrap().into(), output.to_str().unwrap().into(), srt.into(), 6.0, "top".into(), "yellow".into());
+        let again = render(input.to_str().unwrap().into(), output.to_str().unwrap().into(), srt.into(), 6.0, "top".into(), "yellow".into(), Look::default());
         assert!(again.is_err(), "mevcut dosyanın üzerine yazmamalı");
         assert!(fs::read_dir(&dir).unwrap().all(|e| !e.unwrap().file_name().to_string_lossy().starts_with(".voxcut-sub-")), "geçici klasör kalmamalı");
         let _ = fs::remove_dir_all(&dir);
     }
 
+    /// Altyazı satırının bulunduğu şeridin (400×34 px) ortalama parlaklığı (0..255): kutu stili görüntüyü gerçekten karartmalı.
+    fn bottom_brightness(video: &Path) -> f64 {
+        let out = Command::new("ffmpeg").args(["-hide_banner", "-nostdin", "-v", "error", "-ss", "1", "-i"]).arg(video)
+            .args(["-frames:v", "1", "-vf", "crop=400:34:120:318,format=gray", "-f", "rawvideo", "-"]).output().unwrap();
+        assert!(out.status.success() && !out.stdout.is_empty());
+        out.stdout.iter().map(|b| *b as f64).sum::<f64>() / out.stdout.len() as f64
+    }
+
+    #[test]
+    fn look_options_change_the_rendered_pixels() {
+        if Command::new("ffmpeg").arg("-version").output().is_err() { return; }
+        let dir = std::env::temp_dir().join(format!("voxcut gorunum ğş {}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        let input = dir.join("k.mp4");
+        let made = Command::new("ffmpeg").args(["-hide_banner", "-nostdin", "-y", "-f", "lavfi", "-i", "testsrc=size=640x360:rate=25:duration=3", "-c:v", "libx264", "-pix_fmt", "yuv420p"]).arg(&input).output().unwrap();
+        assert!(made.status.success());
+        let srt = "1\n00:00:00,000 --> 00:00:03,000\nBu uzun bir deneme altyazısı satırıdır\n";
+        let run = |name: &str, look: Look| {
+            let out = dir.join(name);
+            render(input.to_str().unwrap().into(), out.to_str().unwrap().into(), srt.into(), 7.0, "bottom".into(), "white".into(), look).unwrap();
+            bottom_brightness(&out)
+        };
+        let plain = run("duz.mp4", Look::default());
+        let boxed = run("kutulu.mp4", Look { boxed: true, ..Look::default() });
+        let other = run("farkli.mp4", Look { outline: 6.0, bold: true, font: "Impact".into(), ..Look::default() });
+        assert!(boxed < plain - 10.0, "kutu alt şeridi karartmalı: düz {plain:.1}, kutulu {boxed:.1}");
+        assert!((other - plain).abs() > 0.2, "yazı tipi/kalın/kontur görüntüyü değiştirmeli: düz {plain:.1}, farklı {other:.1}");
+        let _ = fs::remove_dir_all(&dir);
+    }
+
     #[test]
     fn render_rejects_relative_or_missing_input() {
-        let err = render("yok.mp4".into(), "C:\\tmp\\o.mp4".into(), "1\n00:00:00,000 --> 00:00:01,000\na\n".into(), 5.0, "bottom".into(), "white".into()).unwrap_err();
+        let err = render("yok.mp4".into(), "C:\\tmp\\o.mp4".into(), "1\n00:00:00,000 --> 00:00:01,000\na\n".into(), 5.0, "bottom".into(), "white".into(), Look::default()).unwrap_err();
         assert!(err.contains("bulunamadı"));
     }
 }

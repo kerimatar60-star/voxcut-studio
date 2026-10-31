@@ -3,7 +3,8 @@ import { invoke, isTauri } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { FileVideo, Flame, LoaderCircle } from 'lucide-react';
 import { baseName } from '../../../core/audioMixModel';
-import { BURN_COLORS, BURN_POSITIONS, BURN_SIZES, planBurn, type BurnColor, type BurnPosition } from '../../../core/subtitleBurn';
+import { DEFAULT_FONT, FONT_FAMILIES } from '../../../core/designText';
+import { BURN_COLORS, BURN_OUTLINES, BURN_POSITIONS, BURN_SIZES, planBurn, type BurnColor, type BurnPosition } from '../../../core/subtitleBurn';
 import type { SubtitleCue } from '../../../core/types';
 
 type Probe = [number, boolean, boolean];
@@ -19,6 +20,10 @@ export function SubtitleBurnPanel({ cues }: { cues: SubtitleCue[] }) {
   const [size, setSize] = useState<(typeof BURN_SIZES)[number]['id']>('medium');
   const [position, setPosition] = useState<BurnPosition>('bottom');
   const [color, setColor] = useState<BurnColor>('white');
+  const [font, setFont] = useState<string>(DEFAULT_FONT);
+  const [bold, setBold] = useState(false);
+  const [outline, setOutline] = useState<(typeof BURN_OUTLINES)[number]['id']>('thin');
+  const [boxed, setBoxed] = useState(false);
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
@@ -54,7 +59,7 @@ export function SubtitleBurnPanel({ cues }: { cues: SubtitleCue[] }) {
       const outputPath = await save({ title: 'Altyazılı videoyu MP4 olarak kaydet', defaultPath: 'VoxCut_Altyazili.mp4', filters: [{ name: 'MP4 video', extensions: ['mp4'] }] });
       if (!outputPath) return;
       setWorking(true);
-      const result = await invoke<string>('burn_subtitles', { inputPath: source, outputPath, srt: final.srt, sizePercent: percent, position, color });
+      const result = await invoke<string>('burn_subtitles', { inputPath: source, outputPath, srt: final.srt, sizePercent: percent, position, color, font, bold, outline: BURN_OUTLINES.find(o => o.id === outline)?.value ?? 1.5, boxed });
       setMessage(result);
     } catch (error) {
       fail(`Altyazı yakılamadı: ${formatError(error)}`);
@@ -81,6 +86,14 @@ export function SubtitleBurnPanel({ cues }: { cues: SubtitleCue[] }) {
             <div className="field"><label>Renk</label>
               <select value={color} disabled={working} onChange={e => setColor(e.target.value as BurnColor)}>{BURN_COLORS.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}</select></div>
           </div>
+          <div className="property-grid">
+            <label className="field">Yazı tipi<select value={font} disabled={working} onChange={e => setFont(e.target.value)}>{FONT_FAMILIES.map(f => <option key={f} value={f}>{f}</option>)}</select></label>
+            <label className="field">Kontur<select value={outline} disabled={working || boxed} onChange={e => setOutline(e.target.value as typeof outline)}>{BURN_OUTLINES.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}</select></label>
+          </div>
+          <div className="property-grid">
+            <label className="checkbox-row"><input type="checkbox" checked={bold} disabled={working} onChange={e => setBold(e.target.checked)} /> Kalın</label>
+            <label className="checkbox-row"><input type="checkbox" checked={boxed} disabled={working} onChange={e => setBoxed(e.target.checked)} /> Arka plan kutusu</label>
+          </div>
           <p className="vc-trim-hint">
             {source ? `${plan.used} altyazı yakılacak.` : `${plan.used} geçerli altyazı var.`}
             {plan.clipped > 0 && ` ${plan.clipped} tanesi video sonunda kırpılacak.`}
@@ -92,7 +105,7 @@ export function SubtitleBurnPanel({ cues }: { cues: SubtitleCue[] }) {
             {working ? 'FFmpeg işliyor…' : 'Yaz ve MP4 kaydet'}
           </button>
           {message && <p role="status" className={`vc-trim-result ${isError ? 'vc-trim-error' : ''}`}>{message}</p>}
-          <p className="vc-trim-hint">Video yeniden kodlanır (CPU / libx264, CRF 21); ses AAC 192k olur. Uzun videolarda süre alabilir, iptal henüz yok. Yazı tipi Arial'dır.</p>
+          <p className="vc-trim-hint">Video yeniden kodlanır (CPU / libx264, CRF 21); ses AAC 192k olur. Uzun videolarda süre alabilir, iptal henüz yok. Yazı tipleri Windows'ta hazır gelen sistem yazı tipleridir; bulunamazsa FFmpeg yedek bir yazı tipi kullanır.</p>
         </>
       )}
     </div>

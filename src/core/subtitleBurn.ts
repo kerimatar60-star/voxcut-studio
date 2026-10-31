@@ -2,7 +2,14 @@ import type { SubtitleCue } from './types';
 import { cuesToSrt } from './subtitles';
 
 export type BurnPosition = 'bottom' | 'middle' | 'top';
-export type BurnColor = 'white' | 'yellow';
+export type BurnColor = 'white' | 'yellow' | 'cyan' | 'green';
+/** Kontur kalınlığı seçenekleri (libass birimi; 0 = kontursuz). Kutu modunda kontur yerine yarı saydam arka plan kullanılır. */
+export const BURN_OUTLINES = [
+  { id: 'none', label: 'Yok', value: 0 },
+  { id: 'thin', label: 'İnce', value: 1.5 },
+  { id: 'medium', label: 'Orta', value: 3 },
+  { id: 'thick', label: 'Kalın', value: 5 },
+] as const;
 
 /** Yazı boyutu, video yüksekliğinin yüzdesidir (çözünürlükten bağımsız). */
 export const BURN_SIZES = [
@@ -13,7 +20,7 @@ export const BURN_SIZES = [
 export const BURN_POSITIONS: { id: BurnPosition; label: string }[] = [
   { id: 'bottom', label: 'Alt' }, { id: 'middle', label: 'Orta' }, { id: 'top', label: 'Üst' },
 ];
-export const BURN_COLORS: { id: BurnColor; label: string }[] = [{ id: 'white', label: 'Beyaz' }, { id: 'yellow', label: 'Sarı' }];
+export const BURN_COLORS: { id: BurnColor; label: string }[] = [{ id: 'white', label: 'Beyaz' }, { id: 'yellow', label: 'Sarı' }, { id: 'cyan', label: 'Turkuaz' }, { id: 'green', label: 'Yeşil' }];
 
 export type BurnPlan = { srt: string; used: number; invalid: number; dropped: number; clipped: number };
 
