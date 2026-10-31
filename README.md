@@ -7,6 +7,14 @@ Hesap yok, abonelik yok, bulut yok: dosyalarınız bilgisayarınızda kalır.
 
 > **Durum: ALFA (0.1).** Çalışır ve otomatik testlerle denenmiştir, ama Canva veya CapCut'ın tamamı değildir ve gerçek kullanıcı testlerinden geçmedi. Aşağıdaki "Neler var / neler yok" bölümü dürüst durumu anlatır.
 
+## Ekran görüntüleri
+
+| Açık tema | Koyu tema |
+|---|---|
+| ![Tasarım sekmesi, açık tema](docs/screenshots/tasarim.png) | ![Tasarım sekmesi, koyu tema](docs/screenshots/tasarim-koyu.png) |
+
+*Tasarım sekmesi, hazır şablon uygulanmış. Görüntüler tarayıcı önizlemesinden alındı; video, ses ve altyazı işlemleri (FFmpeg, Whisper) masaüstü uygulamasında çalışır.*
+
 ## İndirme ve kurulum
 
 1. [Releases](../../releases) sayfasından `VoxCut.Studio_..._x64-setup.exe` dosyasını indirin (GitHub dosya adındaki boşlukları nokta yapar). Windows 10/11 (64 bit).
