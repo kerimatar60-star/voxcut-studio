@@ -1,6 +1,7 @@
 import type { DesignElement, MediaAsset, ProjectDocument, SubtitleCue } from './types';
 
 import { parseAudioMix, printOf } from './audioMixModel';
+import { isFontFamily } from './designText';
 
 const now = () => Date.now();
 export const newId = () => crypto.randomUUID();
@@ -11,7 +12,7 @@ export const exampleProject = (): ProjectDocument => ({
     width: 1280, height: 720, background: '#1b1d3b', elements: [
       { id: newId(), kind: 'ellipse', x: 74, y: 12, width: 27, height: 48, text: '', color: '#ffffff', background: '#8164f8', fontSize: 32, weight: 600 },
       { id: newId(), kind: 'rectangle', x: 7, y: 17, width: 10, height: 4, text: '', color: '#ffffff', background: '#bca8ff', fontSize: 32, weight: 600 },
-      { id: newId(), kind: 'text', x: 7, y: 30, width: 75, height: 21, text: 'Hikâyeni\ntasarla.', color: '#ffffff', background: 'transparent', fontSize: 83, weight: 800 },
+      { id: newId(), kind: 'text', x: 7, y: 30, width: 75, height: 29, text: 'Hikâyeni\ntasarla.', color: '#ffffff', background: 'transparent', fontSize: 83, weight: 800 },
       { id: newId(), kind: 'text', x: 7, y: 71, width: 72, height: 12, text: 'VoxCut Studio • Yaratıcılık sınır tanımaz', color: '#c5c9eb', background: 'transparent', fontSize: 26, weight: 500 },
     ]
   },
@@ -40,7 +41,19 @@ export function parseProject(input: unknown): ProjectDocument {
     const e = el as Record<string,unknown>;
     if (!['text','rectangle','ellipse'].includes(String(e.kind))) throw new Error('Desteklenmeyen katman.');
     if (![e.x,e.y,e.width,e.height,e.fontSize,e.weight].every(v => typeof v==='number' && Number.isFinite(v))) throw new Error('Katman ölçüleri geçersiz.');
-    return { id:String(e.id).slice(0,120), kind:e.kind as DesignElement['kind'], x:Number(e.x), y:Number(e.y), width:Number(e.width), height:Number(e.height), text:String(e.text ?? '').slice(0,3000), color:String(e.color ?? '#ffffff').slice(0,80), background:String(e.background ?? '#7355e9').slice(0,80),fontSize:Number(e.fontSize),weight:Number(e.weight)};
+    const num=(v:unknown,min:number,max:number)=>typeof v==='number'&&Number.isFinite(v)?Math.min(max,Math.max(min,v)):undefined;
+    const opacity=num(e.opacity,0.05,1),rotation=num(e.rotation,-360,360),strokeWidth=num(e.strokeWidth,0,200);
+    const extras:Partial<DesignElement>={
+      ...(isFontFamily(e.fontFamily)?{fontFamily:e.fontFamily}:{}),
+      ...(e.align==='left'||e.align==='center'||e.align==='right'?{align:e.align}:{}),
+      ...(e.italic===true?{italic:true}:{}),
+      ...(e.shadow===true?{shadow:true}:{}),
+      ...(typeof e.strokeColor==='string'&&/^#[0-9a-fA-F]{3,8}$/.test(e.strokeColor)?{strokeColor:e.strokeColor}:{}),
+      ...(strokeWidth!==undefined&&strokeWidth>0?{strokeWidth}:{}),
+      ...(opacity!==undefined&&opacity<1?{opacity}:{}),
+      ...(rotation!==undefined&&rotation!==0?{rotation}:{}),
+    };
+    return { id:String(e.id).slice(0,120), kind:e.kind as DesignElement['kind'], x:Number(e.x), y:Number(e.y), width:Number(e.width), height:Number(e.height), text:String(e.text ?? '').slice(0,3000), color:String(e.color ?? '#ffffff').slice(0,80), background:String(e.background ?? '#7355e9').slice(0,80),fontSize:Number(e.fontSize),weight:Number(e.weight),...extras};
   });
   const assets:MediaAsset[] = value.assets.map((asset:unknown) => {
     if (!asset || typeof asset!=='object') throw new Error('Medya kaydı geçersiz.');

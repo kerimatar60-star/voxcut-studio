@@ -1,4 +1,6 @@
 import {duplicateLayer,moveLayer,resizeCanvas} from '../../core/designCanvas';
+import {alignBox} from '../../core/designGeometry';
+import type {AlignHow} from '../../core/designGeometry';
 import type {LayerMove} from '../../core/designCanvas';
 import {makeElement,newId} from '../../core/project';
 import type {DesignElement,UpdateProject} from '../../core/types';
@@ -21,5 +23,14 @@ export function useDesignActions(update:UpdateProject,selected:string|null,setSe
     update(p=>({...p,design:{...p.design,elements:duplicateLayer(p.design.elements,selected,copyId).elements}}));
     setSelected(copyId);
   };
-  return {changeElement,addElement,removeElement,setCanvas,moveSelected,duplicateSelected};
+  /** Ok tuşlarıyla kaydırma (yüzde); katman tuvalin çok dışına çıkmasın diye -50..150 arasında kalır. */
+  const nudgeSelected=(dx:number,dy:number)=>{
+    if(!selected)return;
+    update(p=>({...p,design:{...p.design,elements:p.design.elements.map(e=>e.id===selected?{...e,x:Math.min(150,Math.max(-50,e.x+dx)),y:Math.min(150,Math.max(-50,e.y+dy))}:e)}}));
+  };
+  const alignSelected=(how:AlignHow)=>{
+    if(!selected)return;
+    update(p=>({...p,design:{...p.design,elements:p.design.elements.map(e=>e.id===selected?alignBox(e,how):e)}}));
+  };
+  return {changeElement,addElement,removeElement,setCanvas,moveSelected,duplicateSelected,nudgeSelected,alignSelected};
 }

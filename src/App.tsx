@@ -88,7 +88,7 @@ export default function App(){
           <div className="editor-header"><div className="breadcrumb">PROJE / <span>{tabs.find(t=>t.id===workspace)?.label.toUpperCase()}</span></div><div className="editor-header-right"><span className="status-online"/> Çalışma alanı hazır <span className="sep">•</span> <span className="resolution">{workspace==='design'?`${project.design.width} × ${project.design.height}`:'Yerel ön izleme'}</span></div></div>
           <div className="preview-area">
             {workspace==='design'
-              ?<DesignStage design={project.design} selectedElement={selectedElement} onSelect={setSelectedElement} update={update}/>
+              ?<DesignStage design={project.design} selectedElement={selectedElement} onSelect={setSelectedElement} update={update} onDelete={design.removeElement} onNudge={design.nudgeSelected}/>
               :<MediaPreview workspace={workspace} asset={asset} src={src} cues={project.subtitles} currentTime={currentTime} onTime={setCurrentTime} videoVolume={videoVolume} audioVolume={audioVolume} onPickFile={pickMedia}/>}
           </div>
           <Timeline workspace={workspace} project={project} selectedElement={selectedElement} onSelectElement={setSelectedElement} onSelectAsset={media.setSelectedAsset} onOpenSubtitles={()=>setWorkspace('subtitles')}/>
@@ -98,7 +98,7 @@ export default function App(){
           <div className="panel-heading"><div><span className="eyebrow">DÜZENLE</span><h2>Özellikler</h2></div><Settings2 size={18} className="muted-icon"/></div>
           <div className="vc-mix-container" hidden={workspace!=='audio'}><AudioMixPanel mix={project.audioMix??emptyAudioMix()} onChange={changeMix} loadToken={mixLoadToken}/></div>
           {workspace==='design'
-            ?<DesignProperties element={element} changeElement={design.changeElement} removeElement={design.removeElement} onMove={design.moveSelected} onDuplicate={design.duplicateSelected}/>
+            ?<DesignProperties element={element} changeElement={design.changeElement} removeElement={design.removeElement} onMove={design.moveSelected} onDuplicate={design.duplicateSelected} onAlign={design.alignSelected}/>
             :workspace==='subtitles'
               ?<CueList cues={project.subtitles} onUpdate={subs.updateCue} onRemove={subs.removeCue} onAdd={subs.addCue} onExportSrt={subs.exportSrt}/>
               :<MediaProperties workspace={workspace} asset={asset} videoVolume={videoVolume} audioVolume={audioVolume} setVideoVolume={setVideoVolume} setAudioVolume={setAudioVolume}/>}

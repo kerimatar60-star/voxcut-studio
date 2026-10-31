@@ -1,4 +1,5 @@
-import type { ProjectDocument } from './types';
+import type { DesignElement, ProjectDocument } from './types';
+import { fontStack, LINE_HEIGHT, wrapText } from './designText';
 import { saveExport } from './saveFile';
 import { MAX_CANVAS } from './designCanvas';
 
@@ -26,6 +27,35 @@ export function designFileName(projectName: string, format: ExportFormat): strin
   return `${base}.${EXPORT_FORMATS.find(f => f.id === format)?.ext ?? 'png'}`;
 }
 
+/** Tek katmanı çizer: dönme (merkez etrafında), opaklık, yazı stili ve kutuya kırpma önizleme (CSS) ile aynı kurallara uyar. */
+function drawElement(ctx: CanvasRenderingContext2D, el: DesignElement, canvasW: number, canvasH: number) {
+  const x = el.x / 100 * canvasW, y = el.y / 100 * canvasH, w = el.width / 100 * canvasW, h = el.height / 100 * canvasH;
+  ctx.save();
+  ctx.globalAlpha = el.opacity ?? 1;
+  if (el.rotation) { ctx.translate(x + w / 2, y + h / 2); ctx.rotate(el.rotation * Math.PI / 180); ctx.translate(-(x + w / 2), -(y + h / 2)); }
+  if (el.kind === 'rectangle') { ctx.fillStyle = el.background; ctx.fillRect(x, y, w, h); }
+  else if (el.kind === 'ellipse') { ctx.fillStyle = el.background; ctx.beginPath(); ctx.ellipse(x + w / 2, y + h / 2, Math.max(1, w / 2), Math.max(1, h / 2), 0, 0, Math.PI * 2); ctx.fill(); }
+  else {
+    ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+    const size = el.fontSize, align = el.align ?? 'left';
+    ctx.font = `${el.italic ? 'italic ' : ''}${el.weight} ${size}px ${fontStack(el.fontFamily)}`;
+    ctx.textBaseline = 'top'; ctx.textAlign = align; ctx.lineJoin = 'round';
+    const tx = align === 'center' ? x + w / 2 : align === 'right' ? x + w : x;
+    const lines = wrapText(el.text, Math.max(1, w), s => ctx.measureText(s).width);
+    const stroke = (el.strokeWidth ?? 0) > 0;
+    lines.forEach((line, i) => {
+      const ty = y + i * size * LINE_HEIGHT;
+      const shadow = () => { if (el.shadow) { ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = size * 0.12; ctx.shadowOffsetY = size * 0.05; } };
+      const noShadow = () => { ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; };
+      if (stroke) { shadow(); ctx.lineWidth = el.strokeWidth!; ctx.strokeStyle = el.strokeColor ?? '#000000'; ctx.strokeText(line, tx, ty); noShadow(); }
+      else shadow();
+      ctx.fillStyle = el.color; ctx.fillText(line, tx, ty);
+      noShadow();
+    });
+  }
+  ctx.restore();
+}
+
 /** Tasarımı verilen ölçekle bir tuvale çizer (tüm koordinatlar mantıksal piksel, çıktı ölçeklenir). */
 export function renderDesign(project: ProjectDocument, scale: number): HTMLCanvasElement {
   const { width, height, background, elements } = project.design;
@@ -36,17 +66,7 @@ export function renderDesign(project: ProjectDocument, scale: number): HTMLCanva
   if (!ctx) throw new Error('Tuval oluşturulamadı.');
   ctx.scale(size.width / width, size.height / height);
   ctx.fillStyle = background; ctx.fillRect(0, 0, width, height);
-  for (const element of elements) {
-    const x = element.x / 100 * width, y = element.y / 100 * height, w = element.width / 100 * width, h = element.height / 100 * height;
-    if (element.kind === 'rectangle') { ctx.fillStyle = element.background; ctx.fillRect(x, y, w, h); }
-    else if (element.kind === 'ellipse') { ctx.fillStyle = element.background; ctx.beginPath(); ctx.ellipse(x + w / 2, y + h / 2, Math.max(1, w / 2), Math.max(1, h / 2), 0, 0, Math.PI * 2); ctx.fill(); }
-    else {
-      ctx.fillStyle = element.color; ctx.font = `${element.weight} ${element.fontSize}px Arial, sans-serif`;
-      ctx.textBaseline = 'top';
-      const lines = element.text.split('\n');
-      for (let i = 0; i < lines.length; i++) ctx.fillText(lines[i], x, y + i * element.fontSize * 1.12, Math.max(1, w));
-    }
-  }
+  for (const element of elements) drawElement(ctx, element, width, height);
   return canvas;
 }
 

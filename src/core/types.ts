@@ -29,6 +29,15 @@ export type DesignElement = {
   background: string;
   fontSize: number;
   weight: number;
+  /** Aşağıdakiler isteğe bağlıdır; eski projelerde yoktur (varsayılanlar: Arial, sola hizalı, gölgesiz/konturSuz, tam opak, dönmesiz). */
+  fontFamily?: string;
+  align?: 'left' | 'center' | 'right';
+  italic?: boolean;
+  shadow?: boolean;
+  strokeColor?: string;
+  strokeWidth?: number;
+  opacity?: number;
+  rotation?: number;
 };
 
 export type SubtitleCue = { id: string; start: number; end: number; text: string };
