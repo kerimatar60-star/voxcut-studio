@@ -279,3 +279,7 @@
 ## A52 — 2026-11-01 GitHub yayını
 - [YAYINLANDI] Depo `kerimatar60-star/voxcut-studio` (herkese açık, MIT). Release `v0.1.0-alpha` (pre-release) kurulum dosyasıyla yüklendi; GitHub'ın gösterdiği SHA-256 yerelde ölçülenle aynı (`4204a08b…1703`). CI (frontend + rust) ilk çalıştırmada geçti. Commit e-postaları GitHub noreply adresine çevrildi (geçmiş yeniden yazıldı, push öncesi).
 - [DÜZELTME] GitHub, yüklenen dosya adındaki boşlukları noktaya çevirir (`VoxCut.Studio_0.1.0_x64-setup.exe`). README ve sürüm notundaki indirme/özet komutu bu ada göre güncellendi. Yerel derleme çıktısı hâlâ `VoxCut Studio_0.1.0_x64-setup.exe` adıyla oluşur.
+
+## A53 — 2026-11-01 Türkçe büyük harf noktaları (Ö, İ, Ü) kırpılıyordu
+- [DÜZELTME] Tasarım metin katmanında kutu üst kenarı harfleri kesiyordu: "ÖZELLİK" gibi yazılarda Ö/Ü/İ noktaları görünmüyordu (önizleme ve dışa aktarma). Metin katmanı artık yalnız üstte `TEXT_TOP_BLEED` (0,3 em) pay bırakır; sol/sağ/alt kenarlarda kutuya kırpma aynen sürer.
+- [TESTED] `npm test` 165/165 (yeni `elementStyle.test.ts` 3 test); `npm run build` temiz. Düzeltme, tanıtım görselleri üretilirken gerçek çıktıda fark edildi; düzeltilmiş çıktı gözle kontrol edildi (Ö ve İ noktaları görünüyor).

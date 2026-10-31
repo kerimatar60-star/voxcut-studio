@@ -1,5 +1,5 @@
 import type {CSSProperties} from 'react';
-import {fontStack,LINE_HEIGHT} from '../../core/designText';
+import {fontStack,LINE_HEIGHT,TEXT_TOP_BLEED} from '../../core/designText';
 import type {DesignElement,ProjectDocument} from '../../core/types';
 
 /** Önizleme stili: dışa aktarma ile aynı kurallar (dönme, opaklık, yazı tipi, hizalama, gölge, kontur). Yazı boyutu tuval genişliğine göre `cqw`. */
@@ -9,6 +9,7 @@ export function elementStyle(el:Omit<DesignElement,'id'>,design:Pick<ProjectDocu
   if(el.rotation)style.transform=`rotate(${el.rotation}deg)`;
   if(el.kind==='text'){
     style.fontFamily=fontStack(el.fontFamily);style.textAlign=el.align??'left';style.overflowWrap='anywhere';
+    style.overflow='visible';style.clipPath=`inset(-${TEXT_TOP_BLEED}em 0 0 0)`; // kutuya kırp, ama üstte pay bırak (Ö/İ noktaları)
     if(el.italic)style.fontStyle='italic';
     if(el.shadow)style.textShadow='0 0.05em 0.12em rgba(0,0,0,0.55)';
     if(el.strokeWidth){style.WebkitTextStroke=`${el.strokeWidth/design.width*100}cqw ${el.strokeColor??'#000000'}`;style.paintOrder='stroke fill';}

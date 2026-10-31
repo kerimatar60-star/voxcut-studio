@@ -1,5 +1,5 @@
 import type { DesignElement, ProjectDocument } from './types';
-import { fontStack, LINE_HEIGHT, wrapText } from './designText';
+import { fontStack, LINE_HEIGHT, TEXT_TOP_BLEED, wrapText } from './designText';
 import { saveExport } from './saveFile';
 import { MAX_CANVAS } from './designCanvas';
 import { fitRect } from './designGeometry';
@@ -47,8 +47,8 @@ function drawElement(ctx: CanvasRenderingContext2D, el: DesignElement, canvasW: 
     } else { ctx.fillStyle = '#3a3d52'; ctx.fillRect(x, y, w, h); } // görsel yüklenemediyse yer tutucu (sahnedeki yer tutucuyla aynı mantık)
   }
   else {
-    ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
     const size = el.fontSize, align = el.align ?? 'left';
+    ctx.beginPath(); ctx.rect(x, y - size * TEXT_TOP_BLEED, w, h + size * TEXT_TOP_BLEED); ctx.clip(); // üstte pay: Ö/İ noktaları kırpılmasın
     ctx.font = `${el.italic ? 'italic ' : ''}${el.weight} ${size}px ${fontStack(el.fontFamily)}`;
     ctx.textBaseline = 'top'; ctx.textAlign = align; ctx.lineJoin = 'round';
     const tx = align === 'center' ? x + w / 2 : align === 'right' ? x + w : x;

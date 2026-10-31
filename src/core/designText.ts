@@ -3,6 +3,8 @@ export const FONT_FAMILIES = ['Arial', 'Segoe UI', 'Verdana', 'Tahoma', 'Trebuch
 export type FontFamily = (typeof FONT_FAMILIES)[number];
 export const DEFAULT_FONT: FontFamily = 'Arial';
 export const LINE_HEIGHT = 1.13;
+/** Metin kutusunun üstünde (yazı boyutunun katı olarak) görünür kalan pay: Ö, İ, Ü gibi büyük harflerin noktaları satır kutusunun üstüne taşar ve kırpılmamalı. */
+export const TEXT_TOP_BLEED = 0.3;
 
 export const isFontFamily = (v: unknown): v is FontFamily => typeof v === 'string' && (FONT_FAMILIES as readonly string[]).includes(v);
 
