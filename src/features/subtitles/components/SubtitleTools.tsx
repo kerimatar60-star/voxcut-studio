@@ -1,11 +1,11 @@
 import {Download,Plus,Upload} from 'lucide-react';
-import {FeatureLocked} from '../../../shared/FeatureLocked';
+import {AutoSubtitlePanel} from './AutoSubtitlePanel';
 import {SubtitleBurnPanel} from './SubtitleBurnPanel';
 import type {SubtitleCue} from '../../../core/types';
 
-type Props={cues:SubtitleCue[];onAdd:()=>void;onExportSrt:()=>void;onExportVtt:()=>void;onImportClick:()=>void};
+type Props={cues:SubtitleCue[];onAdd:()=>void;onExportSrt:()=>void;onExportVtt:()=>void;onImportClick:()=>void;onAutoResult:(srt:string)=>void};
 
-export function SubtitleTools({cues,onAdd,onExportSrt,onExportVtt,onImportClick}:Props){
+export function SubtitleTools({cues,onAdd,onExportSrt,onExportVtt,onImportClick,onAutoResult}:Props){
   return <div className="tool-section">
     <span className="small-heading">ALTYAZI DÜZENLEYİCİSİ</span>
     <button className="tool-card" onClick={onAdd}><span className="tool-icon purple"><Plus size={20}/></span><span><strong>Altyazı ekle</strong><small>Oynatma zamanından başlat</small></span></button>
@@ -14,6 +14,7 @@ export function SubtitleTools({cues,onAdd,onExportSrt,onExportVtt,onImportClick}
     <button className="tool-card" onClick={onImportClick}><span className="tool-icon purple"><Upload size={20}/></span><span><strong>SRT / VTT içe aktar</strong><small>Mevcut altyazı dosyasını yükle</small></span></button>
     <div className="divider"/>
     <SubtitleBurnPanel cues={cues}/>
-    <FeatureLocked title="Otomatik Türkçe altyazı" detail="Whisper entegrasyonu sonraki aşamada."/>
+    <div className="divider"/>
+    <AutoSubtitlePanel onResult={onAutoResult}/>
   </div>;
 }

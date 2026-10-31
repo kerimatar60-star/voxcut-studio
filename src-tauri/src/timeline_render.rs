@@ -261,7 +261,7 @@ mod tests {
     fn color_spread(video: &Path, at: f64) -> f64 {
         let out = Command::new("ffmpeg").args(["-hide_banner", "-nostdin", "-v", "error", "-ss", &at.to_string(), "-i"]).arg(video).args(["-frames:v", "1", "-vf", "scale=320:180,format=rgb24", "-f", "rawvideo", "-"]).output().unwrap();
         assert!(out.status.success() && !out.stdout.is_empty());
-        let px = out.stdout.chunks_exact(3);
+        let px = out.stdout.as_chunks::<3>().0.iter();
         let n = px.len() as f64;
         px.map(|p| (*p.iter().max().unwrap() as f64) - (*p.iter().min().unwrap() as f64)).sum::<f64>() / n
     }

@@ -49,3 +49,15 @@ Ui AI Dialog -> Local Job Queue -> Validation -> Model Registry -> Worker Adapte
 - CPU: Intel Core i7-12700H (14 çekirdek / 20 iş parçacığı), RAM 15,7 GB, GPU: NVIDIA GeForce RTX 3060 Laptop — **VRAM 6144 MiB (6 GB)** (`nvidia-smi` ile ölçüldü; CLAUDE.md'nin istediği gibi varsayılmadı).
 - Sonuç: GPU belleği 6 GB'tır; vokal/enstrüman ayrıştırma ve Whisper modelleri bu bütçeye göre seçilmeli (büyük modeller için parça/segment kullanımı ve CPU yedeği). NVENC bu sürücüyle uyumsuz bulunduğu için video kodlama CPU / libx264'tür.
 - Model indirme, bu belgedeki seçimlerden biri kullanıcı onayıyla yapılmadan başlamaz.
+
+## Kurulu kaynaklar ve doğrulama özetleri (A45, 2026-10-31)
+
+| Parça | Kaynak | Boyut | SHA-256 |
+|---|---|---|---|
+| whisper.cpp Windows CPU motoru | github.com/ggml-org/whisper.cpp, sürüm etiketi b5454, `whisper-bin-x64.zip` | 8 928 640 B | `6ba69e3482d7826214f90a6a9c84ca07782aec1e1d0c6a7c30c994fd5d816ccb` |
+| ggml-tiny | huggingface.co/ggerganov/whisper.cpp | 77 691 713 B | `be07e048e1e599ad46341c8d2a135645097a538221678b7acdd1b1919c6e1b21` |
+| ggml-base | aynı | 147 951 465 B | `60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe` |
+| ggml-small (önerilen) | aynı | 487 601 967 B | `1be3a9b2063867b937e64e2ec7483364a79917e157fa98c5d94b5c1fffea987b` |
+| ggml-medium | aynı | 1 533 763 059 B | `6c14d5adee5f86394037b4e4e8b59f1673b6cee10e3cf0b11bbdbee79c156208` |
+
+Özetler GitHub sürüm API'sinin `digest` alanından ve Hugging Face LFS `oid` alanından alındı; uygulama indirilen her dosyayı bu değerlerle karşılaştırır. Motor CPU sürümüdür (CUDA sürümü ~685 MB olduğu için kullanılmıyor; ileride isteğe bağlı eklenebilir). Lisanslar: whisper.cpp MIT, OpenAI Whisper ağırlıkları MIT.

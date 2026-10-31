@@ -184,13 +184,13 @@ mod tests {
     fn second_run_reuses_identical_files_and_skips_files_already_inside() {
         let (root, pkg) = setup("tekrar");
         let a = file(&root.join("k"), "a.mp4", 4000, 1);
-        let first = collect_at(&pkg, &[a.clone()], false, Some(None)).unwrap();
-        let again = collect_at(&pkg, &[a.clone()], false, Some(None)).unwrap();
+        let first = collect_at(&pkg, std::slice::from_ref(&a), false, Some(None)).unwrap();
+        let again = collect_at(&pkg, std::slice::from_ref(&a), false, Some(None)).unwrap();
         assert_eq!(first.0, again.0, "aynı içerik aynı hedefe eşlenmeli");
         assert_eq!(again.1, 0, "ikinci çalıştırmada kopyalanacak bayt yok");
         assert_eq!(fs::read_dir(pkg.join("media")).unwrap().count(), 1, "çoğaltma yapılmamalı");
         let inside = first.0[0].1.clone();
-        let third = collect_at(&pkg, &[inside.clone()], false, Some(None)).unwrap();
+        let third = collect_at(&pkg, std::slice::from_ref(&inside), false, Some(None)).unwrap();
         assert_eq!(third.0, vec![(inside.clone(), inside)]);
         assert_eq!(third.1, 0);
         let _ = fs::remove_dir_all(&root);
@@ -200,7 +200,7 @@ mod tests {
     fn insufficient_disk_space_is_refused_before_copying() {
         let (root, pkg) = setup("disk");
         let a = file(&root.join("k"), "a.mp4", 4000, 1);
-        let err = collect_at(&pkg, &[a.clone()], false, Some(Some(50 * 1024 * 1024))).unwrap_err();
+        let err = collect_at(&pkg, std::slice::from_ref(&a), false, Some(Some(50 * 1024 * 1024))).unwrap_err();
         assert!(err.contains("Disk alanı yetersiz"), "{err}");
         assert!(!pkg.join("media").exists());
         assert!(collect_at(&pkg, &[a], false, Some(Some(MARGIN_BYTES + 4000))).is_ok());

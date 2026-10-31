@@ -74,12 +74,12 @@
 
 **Bitti kriteri:** Gürültülü konuşma kaydı + telif sahibi olunan çok enstrümanlı parça ile girdi/çıktı ve A/B test. 'Temizlenmiş' garanti değil, çıktı farkı ölçülecek.
 
-## A7 — Türkçe AI altyazı | P1 | PLAN
+## A7 — Türkçe AI altyazı | P1 | IMPLEMENTED (alfa; Türkçe doğruluk ölçülmedi, bkz. A45)
 
-- [ ] Model sürüm/lisans/cache yönetimi, whisper.cpp kurulum ve batch.
-- [ ] Türkçe transkripsiyon, segment/cue süreleri, editör üzerinden düzeltme.
-- [ ] SRT/VTT, video altyazısı, konuşma algılama + müzik ducking entegrasyonu.
-- [ ] VRAM yetersizse küçük model/CPU; internet olmadan test.
+- [x] Model sürüm/lisans/cache yönetimi, whisper.cpp kurulum (batch yok).
+- [x] Türkçe transkripsiyon, segment/cue süreleri, editör üzerinden düzeltme (Türkçe doğruluk ölçülemedi).
+- [~] SRT/VTT ve video altyazısı mevcut hatlarla çalışır; konuşma algılamaya bağlı otomatik ducking yok.
+- [x] CPU motoru; modeller indirildikten sonra internet olmadan çalışır.
 
 **Bitti kriteri:** Kullanıcının verdiği izinli 2 dakikalık konuşma videosundan düzenlenebilir altyazı ve senkron SRT/MP4.
 
@@ -312,3 +312,14 @@ Her aşamayı PR/commit, ekran görüntüsü veya test çıktısı, tamamlanan i
 - [TESTED] Rust 71/71 (gerçek FFmpeg; yeni/yenilenen 11 timeline testi): fade+cut karışımı süreyi tam geçiş kadar kısaltıyor (9 sn − 1 sn ≈ 8 sn, iki geçişte 9 − 0,5 − 0,5), **12 geçiş türünün tamamı** ayrı ayrı render ediliyor (süre 3,5 sn ± 0,3, ses+video), geçersiz geçiş sayısı/tür/süre/NaN/kısa klip yarısı reddi, parlaklık +0,3 görüntüyü ≥ 15 birim aydınlatıyor, doygunluk 0 görüntüyü griye çeviriyor (renk yayılımı normalin 1/4'ünden az), altyazı kareyi değiştiriyor ve geçersiz SRT/yazı tipi işe başlamadan reddediliyor, ses miksi uygulanıyor ve mix doğrulaması hatalı gain'i reddediyor, filtre grafiği sırası. Clippy 0. `npm test` 139/139 (+7 geçiş/renk/kalıcılık). `npm run build` geçti.
 - [TESTED / ben, tarayıcı, Tauri IPC SAHTE ile gerçek arayüz] 3 klip eklendi; geçiş seçicisi yalnız son olmayan klipte; süre 99 → 3'e kırpıldı; renk ayarı işareti; çıktı süresi 30 → 28,5 sn gösterildi; ses miksi açık + kanal yok → render çağrılmadan Türkçe hata; Rust'a doğru `transitions`/`adjusts`/`subtitles` argümanları gitti; proje JSON'unda geçiş, renk ve seçenekler kayıtlı.
 - [PENDING] Masaüstünde elle deneme; geçişlerin görsel kalitesinin gözle değerlendirilmesi; geçiş önizlemesi (şimdilik yalnız dışa aktarmada görülür); resim klipleri (sabit süreli) ve hız değiştirme yok.
+
+## A45 — 2026-10-31 A7: yerel Whisper ile otomatik altyazı (Türkçe dahil)
+- [IMPLEMENTED] `src-tauri/src/asr.rs`: resmî whisper.cpp Windows CPU sürümü (`ggml-org/whisper.cpp` etiketi b5454, `whisper-bin-x64.zip`, 8,9 MB) ve resmî ggml modelleri (`ggerganov/whisper.cpp`: tiny 74 MB, base 141 MB, **small 465 MB (önerilen)**, medium 1,4 GB). Hiçbiri pakete gömülü değil; yalnız Altyazı sekmesinde **kullanıcı "İndir"e basınca** inmeye başlar. Adresler kodda sabit (komutlar dışarıdan URL kabul etmez), yalnız https, `curl.exe` ile argüman listesi (kabuk yok).
+- [IMPLEMENTED] Her indirme boyut + SHA-256 ile doğrulanır; uyuşmazsa dosya silinir. Motor arşivi Windows `tar.exe` ile ayrı bir klasöre açılır, `whisper-cli.exe` bulunup çalıştırılabildiği denenir, sonra yerine konur. Dosyalar uygulama veri klasöründe (`asr/engine`, `asr/models`).
+- [IMPLEMENTED] Yazıya çevirme: FFmpeg ile 16 kHz mono WAV → `whisper-cli -l tr|en|auto -osrt` → SRT metni arayüze döner → mevcut ayrıştırıcıyla altyazılara alınır (var olan altyazıları değiştir/ekle onayı). İlerleme (`asr-progress` olayı) ve iptal (süreç öldürülür, geçici klasör silinir) var. Kaynak medya değişmez.
+- [TESTED / ben, gerçek ağ + gerçek motor] `cargo test asr_gercek -- --ignored`: motor ve base modeli resmî kaynaklardan indi, SHA-256 doğrulandı, kuruldu; Windows SAPI ile üretilen İngilizce konuşma yazıya çevrildi ("Hello, this is a test of the voice cut studio subtitle system." / "The weather is sunny today.") ve zaman damgalı 2 cue üretildi (tüm test 28 sn, indirme dahil). Günlük: `test-output/asr_gercek.log`.
+- [TESTED] Rust 77 geçti + 2 yok sayılan (stres + gerçek ASR), clippy 0 uyarı (test kodundaki 5 yeni uyarı da giderildi); Vitest 143/143 (4 yeni: `src/core/asr.test.ts`); `npm run build` temiz. 6 yeni Rust birim testi: model kataloğu tutarlılığı, bilinmeyen model/dil reddi, ilerleme satırı ayrıştırma, SRT doğrulama, SHA-256 bilinen değer + iptal, durumun diskteki dosyalardan okunması.
+- [TESTED / ben, tarayıcı, Tauri IPC SAHTE] Panel: motor/model indirme düğmeleri, "Yazıya çevir" düğmesinin nedeniyle devre dışı kalması (motor yok → model yok → dosya yok), gelen SRT'nin 2 altyazıya dönüşmesi ve değiştir onayı doğrulandı. Gerçek Tauri penceresinde elle denenmedi.
+- **ÖLÇÜLMEDİ:** Türkçe doğruluk. Bu makinede yalnız İngilizce SAPI sesi (Zira) kurulu; Türkçe konuşma örneği olmadan WER ölçülemez. Whisper çıktısı özel isimlerde, gürültüde ve müzik üstünde hatalı olabilir; kullanıcı dinleyerek düzeltmelidir. Hız ölçümü (small/medium, uzun kayıt) yapılmadı; GPU (CUDA) sürümü kullanılmıyor, CPU motoru kullanılır. Kelime zamanlaması, konuşmacı ayrımı, bölüm bölüm işleme yok.
+- [PENDING] Masaüstünde elle deneme (izinli 2 dakikalık Türkçe konuşma ile small modeli; SRT'nin videoya yazılması). Lisanslar: whisper.cpp MIT, OpenAI Whisper model ağırlıkları MIT; yine de dağıtım öncesi `docs/THIRD_PARTY_NOTICES.md` (A9) içinde belgelenecek.
+- Geri alma: `git revert` ile bu commit; yeni dosyalar `src-tauri/src/asr.rs`, `src/core/asr.ts`, `src/features/subtitles/components/AutoSubtitlePanel.tsx`.

@@ -27,19 +27,26 @@ export function useSubtitles({subtitles,projectName,update,setNotice,currentTime
     if(!vtt){setNotice('Önce geçerli bir altyazı gir.');return;}
     void saveAs(new Blob([vtt],{type:'text/vtt;charset=utf-8'}),`${baseName}.vtt`,'WebVTT altyazı');
   };
+  const applyImported=(text:string,verb:string)=>{
+    const {cues,skipped}=parseSubtitles(text,newId);
+    const existing=subtitles.length;
+    const replace=existing>0&&window.confirm(`Mevcut ${existing} altyazı silinip ${cues.length} yeni altyazıyla değiştirilsin mi?\n\nİptal: mevcut altyazılara eklenir.`);
+    update(p=>({...p,subtitles:(replace?cues:[...p.subtitles,...cues]).sort((a,b)=>a.start-b.start)}));
+    setNotice(`${cues.length} altyazı ${replace?'değiştirilerek':existing?'eklenerek':''} ${verb}${skipped?`, ${skipped} geçersiz blok atlandı`:''}.`.replace('  ',' '));
+  };
   const importSubtitles=async(files:FileList|null)=>{
     const file=files?.[0];
     if(subtitleInputRef.current)subtitleInputRef.current.value='';
     if(!file)return;
     if(!/\.(srt|vtt)$/i.test(file.name)){setNotice('Yalnızca .srt veya .vtt dosyası seçebilirsin.');return;}
     if(file.size===0||file.size>2_000_000){setNotice('Altyazı dosyası boş veya 2 MB sınırından büyük.');return;}
-    try{
-      const {cues,skipped}=parseSubtitles(await file.text(),newId);
-      const existing=subtitles.length;
-      const replace=existing>0&&window.confirm(`Mevcut ${existing} altyazı silinip içe aktarılan ${cues.length} altyazıyla değiştirilsin mi?\n\nİptal: mevcut altyazılara eklenir.`);
-      update(p=>({...p,subtitles:(replace?cues:[...p.subtitles,...cues]).sort((a,b)=>a.start-b.start)}));
-      setNotice(`${cues.length} altyazı ${replace?'değiştirilerek':existing?'eklenerek':''} içe aktarıldı${skipped?`, ${skipped} geçersiz blok atlandı`:''}.`.replace('  ',' '));
-    }catch(error){setNotice(error instanceof Error?error.message:'Altyazı dosyası okunamadı.');}
+    try{applyImported(await file.text(),'içe aktarıldı');}
+    catch(error){setNotice(error instanceof Error?error.message:'Altyazı dosyası okunamadı.');}
   };
-  return {subtitleInputRef,addCue,updateCue,removeCue,exportSrt,exportVtt,importSubtitles};
+  /** Otomatik tanımadan gelen SRT metnini aynı kurallarla (değiştir/ekle onayı) projeye alır. */
+  const importSrtText=(text:string)=>{
+    try{applyImported(text,'otomatik oluşturuldu');}
+    catch(error){setNotice(error instanceof Error?error.message:'Altyazı çıktısı okunamadı.');}
+  };
+  return {subtitleInputRef,addCue,updateCue,removeCue,exportSrt,exportVtt,importSubtitles,importSrtText};
 }
