@@ -14,7 +14,7 @@ const MAX_PREVIEW_SECS: f64 = 60.0;
 /// Önizleme dosyalarının tutulduğu uygulamaya ait geçici klasör (yalnız bu klasördeki `onizleme-*.wav` dosyaları temizlenir).
 fn preview_dir() -> PathBuf { std::env::temp_dir().join("voxcut-onizleme") }
 
-fn format_of(format: &str) -> Result<(&'static str, &'static [&'static str]), String> {
+pub(crate) fn format_of(format: &str) -> Result<(&'static str, &'static [&'static str]), String> {
     Ok(match format {
         "wav" => ("wav", &["-c:a", "pcm_s16le"]),
         "mp3" => ("mp3", &["-c:a", "libmp3lame", "-b:a", "192k"]),

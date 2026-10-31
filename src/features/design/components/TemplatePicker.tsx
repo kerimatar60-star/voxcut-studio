@@ -20,7 +20,7 @@ export function TemplatePicker({onApply}:{onApply:(id:string)=>void}){
       <span className="template-category">{category}</span>
       <div className="template-grid">
         {DESIGN_TEMPLATES.filter(t=>t.category===category).map(t=>
-          <button key={t.id} type="button" className="template-card" onClick={()=>onApply(t.id)} title={`${t.name} · ${t.width}×${t.height}`} aria-label={`${t.name} şablonunu uygula (${t.width}×${t.height})`}>
+          <button key={t.id} type="button" className="template-card" onClick={()=>onApply(t.id)} title={`${t.name} · ${t.width}×${t.height}`}>
             <Thumb template={t}/><small>{t.name}</small>
           </button>)}
       </div>

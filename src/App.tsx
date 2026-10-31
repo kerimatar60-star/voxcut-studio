@@ -92,7 +92,7 @@ export default function App(){
 
   return <div className="app">
     {media.dragging&&<div className="drop-overlay" role="status"><strong>Medya eklemek için bırak</strong><span>Video, ses veya görsel dosyaları kütüphaneye eklenir</span></div>}
-    <aside className="rail">
+    <aside className="rail" aria-label="Çalışma alanları">
       <div className="brand-icon"><Video size={27} fill="currentColor" strokeWidth={1.8}/></div>
       <span className="rail-divider"/>
       {tabs.map(t=><button key={t.id} title={t.label} className={`rail-item ${workspace===t.id?'active':''}`} onClick={()=>setWorkspace(t.id)}><t.icon size={21}/><span>{t.label}</span></button>)}
@@ -101,6 +101,7 @@ export default function App(){
     </aside>
 
     <main className="shell">
+      <h1 className="sr-only">VoxCut Studio</h1>
       <TopBar name={project.name} onRename={name=>update(p=>({...p,name}))} dirty={files.dirty} projectPath={files.projectPath} isPackage={files.isPackage}
         histInfo={history.histInfo} undo={history.undo} redo={history.redo}
         recent={files.recent} recentOpen={files.recentOpen} setRecentOpen={files.setRecentOpen} refreshRecent={files.refreshRecent} openRecent={files.openRecent} forgetRecent={files.forgetRecent}
