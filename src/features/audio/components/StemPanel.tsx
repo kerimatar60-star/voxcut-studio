@@ -5,12 +5,12 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { Download, FolderOpen, LoaderCircle, Music2, X } from 'lucide-react';
 import { baseName } from '../../../core/audioMixModel';
 import { formatBytes } from '../../../core/asr';
+import { friendlyError } from '../../../core/stems';
 import { MEDIA_EXTENSIONS, kindFromPath } from '../../../core/mediaKinds';
 import { probeMedia } from '../../../shared/mediaProbe';
 
 type Phase = 'engine' | 'model' | 'separate';
 type Status = { engineInstalled: boolean; engineSize: number; modelInstalled: boolean; modelSize: number; maxMinutes: number };
-const PHASE_TEXT: Record<Phase, string> = { engine: 'ONNX Runtime indiriliyor', model: 'Model hazırlanıyor', separate: 'Ayrıştırılıyor' };
 const OUTPUTS = [
   { id: 'vokal', label: 'Vokal (yalnız ses)' },
   { id: 'eslik', label: 'Eşlik (vokalsiz müzik)' },
@@ -20,7 +20,6 @@ const OUTPUTS = [
 ] as const;
 const FORMATS = [{ id: 'wav', label: 'WAV (16 bit)' }, { id: 'flac', label: 'FLAC (kayıpsız)' }, { id: 'mp3', label: 'MP3 (192 kbps)' }] as const;
 const SOURCE_EXT = MEDIA_EXTENSIONS.filter(e => ['audio', 'video'].includes(kindFromPath(`x.${e}`)?.kind ?? ''));
-const errorText = (e: unknown) => { const m = e instanceof Error ? e.message : String(e); return m.length > 500 ? `${m.slice(0, 500)}…` : m; };
 
 /** Yapay zekâ ile kaynak ayrıştırma (vokal / davul / bas / diğer): Demucs (htdemucs) modeli ONNX Runtime ile bu bilgisayarda çalışır. */
 export function StemPanel() {
@@ -31,12 +30,15 @@ export function StemPanel() {
   const [picked, setPicked] = useState<string[]>(['vokal', 'eslik']);
   const [format, setFormat] = useState<(typeof FORMATS)[number]['id']>('wav');
   const [phase, setPhase] = useState<Phase | null>(null);
+  const [step, setStep] = useState('');
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
+  const [resultFolder, setResultFolder] = useState('');
 
   const refresh = useCallback(async () => {
-    try { setStatus(await invoke<Status>('stems_status')); } catch (e) { setIsError(true); setMessage(`Durum okunamadı: ${errorText(e)}`); }
+    try { const s = await invoke<Status>('stems_status'); setStatus(s); return s; }
+    catch (e) { setIsError(true); setMessage(`Durum okunamadı: ${friendlyError(e instanceof Error ? e.message : String(e))}`); return null; }
   }, []);
 
   useEffect(() => {
@@ -50,17 +52,43 @@ export function StemPanel() {
   const busy = phase !== null;
   const ready = !!status?.engineInstalled && !!status?.modelInstalled;
   const tooLong = status ? duration / 60 > status.maxMinutes : false;
-  const blocker = !ready ? 'Önce motoru ve modeli kur.' : !source ? 'Önce bir dosya seç.' : tooLong ? `Bu sürümde en çok ${status?.maxMinutes} dakikalık kayıtlar ayrıştırılır.` : !outDir ? 'Çıktı klasörünü seç.' : picked.length === 0 ? 'En az bir çıktı seç.' : null;
+  const blocker = !ready ? 'Önce kurulumu tamamla.' : !source ? 'Önce bir dosya seç.' : tooLong ? `Bu sürümde en çok ${status?.maxMinutes} dakikalık kayıtlar ayrıştırılır.` : picked.length === 0 ? 'En az bir çıktı seç.' : null;
+  const totalSize = (status ? (status.engineInstalled ? 0 : status.engineSize) + (status.modelInstalled ? 0 : status.modelSize) : 0);
 
-  async function run<T>(next: Phase, work: () => Promise<T>): Promise<T | undefined> {
-    setPhase(next); setProgress(0); setMessage(''); setIsError(false);
+  async function run<T>(next: Phase, label: string, work: () => Promise<T>): Promise<T | undefined> {
+    setPhase(next); setStep(label); setProgress(0); setMessage(''); setIsError(false);
     try { return await work(); }
-    catch (e) { setIsError(true); setMessage(errorText(e)); return undefined; }
-    finally { setPhase(null); await refresh(); }
+    catch (e) { setIsError(true); setMessage(friendlyError(e instanceof Error ? e.message : String(e))); return undefined; }
+    finally { setPhase(null); }
   }
 
+  /** Motor ve modeli sırayla kurar; ilk hatada durur. */
+  async function installAll() {
+    setResultFolder('');
+    let s = status;
+    if (s && !s.engineInstalled) {
+      const ok = await run('engine', 'Adım 1/2: motor indiriliyor', () => invoke<string>('stems_install_engine'));
+      s = await refresh();
+      if (!ok || !s?.engineInstalled) return;
+    }
+    if (s && !s.modelInstalled) {
+      const ok = await run('model', 'Adım 2/2: model indiriliyor', () => invoke<string>('stems_install_model'));
+      s = await refresh();
+      if (!ok) return;
+    }
+    setMessage('Kurulum tamamlandı. Şimdi bir dosya seçebilirsin.'); setIsError(false);
+  }
+  async function importModel() {
+    try {
+      const dir = await open({ multiple: false, directory: true, title: 'htdemucs.onnx ve htdemucs.onnx.data dosyalarının bulunduğu klasörü seç' });
+      if (typeof dir !== 'string') return;
+      const t = await run('model', 'Model klasörden alınıyor', () => invoke<string>('stems_import_model', { from: dir }));
+      await refresh();
+      if (t) setMessage(t);
+    } catch (e) { setIsError(true); setMessage(friendlyError(e instanceof Error ? e.message : String(e))); }
+  }
   async function pickSource() {
-    setMessage(''); setIsError(false);
+    setMessage(''); setIsError(false); setResultFolder('');
     try {
       const chosen = await open({ multiple: false, directory: false, title: 'Ayrıştırılacak ses veya video dosyasını seç', filters: [{ name: 'Ses ve video', extensions: SOURCE_EXT }] });
       if (typeof chosen !== 'string') return;
@@ -68,62 +96,55 @@ export function StemPanel() {
       if (!r.ok) throw new Error(r.error);
       if (!r.hasAudio) throw new Error('Bu dosyada ses akışı yok.');
       setSource(chosen); setDuration(r.duration);
-    } catch (e) { setIsError(true); setMessage(errorText(e)); }
+    } catch (e) { setIsError(true); setMessage(friendlyError(e instanceof Error ? e.message : String(e))); }
   }
-  async function pickFolder(title: string, set: (p: string) => void) {
-    try { const chosen = await open({ multiple: false, directory: true, title }); if (typeof chosen === 'string') set(chosen); }
-    catch (e) { setIsError(true); setMessage(errorText(e)); }
-  }
-  async function installEngine() { const t = await run('engine', () => invoke<string>('stems_install_engine')); if (t) setMessage(t); }
-  async function installModel() { const t = await run('model', () => invoke<string>('stems_install_model')); if (t) setMessage(t); }
-  async function importModel() {
-    let dir: string | null = null;
-    await pickFolder('htdemucs.onnx ve htdemucs.onnx.data dosyalarının bulunduğu klasörü seç', p => { dir = p; });
-    if (!dir) return;
-    const t = await run('model', () => invoke<string>('stems_import_model', { from: dir }));
-    if (t) setMessage(t);
+  async function pickFolder() {
+    try { const chosen = await open({ multiple: false, directory: true, title: 'Çıktıların kaydedileceği klasörü seç' }); if (typeof chosen === 'string') setOutDir(chosen); }
+    catch (e) { setIsError(true); setMessage(friendlyError(e instanceof Error ? e.message : String(e))); }
   }
   async function separate() {
-    const t = await run('separate', () => invoke<string>('stems_separate', { inputPath: source, outDir, outputs: picked, format }));
-    if (t) setMessage(t);
+    setResultFolder('');
+    const r = await run('separate', 'Ayrıştırılıyor', () => invoke<{ message: string; folder: string }>('stems_separate', { inputPath: source, outDir, outputs: picked, format }));
+    if (r) { setMessage(r.message); setResultFolder(r.folder); }
   }
   const toggle = (id: string) => setPicked(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
 
   if (!isTauri()) return <p className="vc-trim-alert">Ses ayrıştırma Tauri masaüstü uygulamasında çalışır.</p>;
   return <section className="vc-trim-panel" aria-label="Yapay zekâ ile ses ayrıştırma">
     <div className="vc-trim-heading"><Music2 size={16} /> Yapay zekâ ile ayrıştırma</div>
-    <p className="vc-trim-hint">Bir şarkıyı veya kaydı vokal, davul, bas ve diğer seslere ayırır (Demucs modeli, bu bilgisayarda çalışır; ses internete gönderilmez). İlk kullanımda motor ve model <strong>sen onaylayınca</strong> kurulur. Sonuç kusursuz değildir: stemler arasında sızıntı ve yapaylık olabilir. Kaynak dosya değişmez; çıktılar yeni dosyalardır.</p>
-    <div className="field"><label>ONNX Runtime motoru (Microsoft, MIT)</label>
-      {status?.engineInstalled
-        ? <p className="vc-trim-name">Kurulu</p>
-        : <button className="btn btn-dark wide" type="button" disabled={busy || !status} onClick={installEngine}><Download size={15} /> Motoru indir ({formatBytes(status?.engineSize ?? 0)}, SHA-256 doğrulanır)</button>}
-    </div>
-    <div className="field"><label>Ayrıştırma modeli (htdemucs, MIT)</label>
-      {status?.modelInstalled
-        ? <p className="vc-trim-name">Kurulu</p>
-        : <div className="property-grid">
-          <button className="btn btn-dark" type="button" disabled={busy || !status} onClick={installModel}><Download size={15} /> Modeli indir ({formatBytes(status?.modelSize ?? 0)})</button>
-          <button className="btn btn-dark" type="button" disabled={busy || !status} onClick={importModel}><FolderOpen size={15} /> Yerel klasörden al…</button>
-        </div>}
-    </div>
-    <button className="btn btn-dark wide" type="button" disabled={busy} onClick={pickSource}>{source ? 'Dosyayı değiştir' : '1 · Dosya seç'}</button>
-    <p className="vc-trim-name" title={source}>{source ? `${baseName(source)} · ${(duration / 60).toFixed(1)} dk` : 'Seçilmedi'}</p>
-    <button className="btn btn-dark wide" type="button" disabled={busy} onClick={() => pickFolder('Çıktıların kaydedileceği klasörü seç', setOutDir)}><FolderOpen size={15} /> 2 · Çıktı klasörü seç</button>
-    <p className="vc-trim-name" title={outDir}>{outDir || 'Seçilmedi'}</p>
-    <fieldset className="property-grid" disabled={busy} aria-label="Kaydedilecek çıktılar">
-      {OUTPUTS.map(o => <label key={o.id} className="checkbox-row"><input type="checkbox" checked={picked.includes(o.id)} onChange={() => toggle(o.id)} /> {o.label}</label>)}
-    </fieldset>
-    <label className="field">Çıktı biçimi<select value={format} disabled={busy} onChange={e => setFormat(e.target.value as typeof format)}>{FORMATS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}</select></label>
-    {busy && phase && <div role="progressbar" aria-label={PHASE_TEXT[phase]} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
-      <progress max={100} value={progress} style={{ width: '100%' }} />
-      <p className="vc-trim-hint">{PHASE_TEXT[phase]}… %{progress}</p>
+    <p className="vc-trim-hint">Bir şarkıyı veya kaydı vokal, davul, bas ve diğer seslere ayırır. Her şey bu bilgisayarda çalışır; ses internete gönderilmez. Sonuç kusursuz değildir: sesler arasında hafif sızıntı olabilir. Kaynak dosya değişmez; çıktılar yeni dosyalardır.</p>
+
+    {!ready && <div className="vc-trim-panel">
+      <p className="vc-trim-hint"><strong>Bir kerelik kurulum gerekli.</strong> Yapay zekâ motoru ve modeli indirilecek{status ? ` (toplam ≈ ${formatBytes(totalSize)})` : ''}. İndirmeler resmî kaynaklardan yapılır ve doğrulanır. Düğmeye bastığında onaylamış olursun.</p>
+      <button className="btn btn-primary wide" type="button" disabled={busy || !status} onClick={installAll}>{busy ? <LoaderCircle size={15} className="vc-spin" /> : <Download size={15} />} Kurulumu tamamla</button>
+      <details>
+        <summary className="vc-trim-hint">Gelişmiş: model dosyası bende var</summary>
+        <p className="vc-trim-hint">Model dosyalarını (<code>htdemucs.onnx</code> ve <code>htdemucs.onnx.data</code>) bir klasöre koyduysan buradan alabilirsin. Önce motor kurulmuş olmalı.</p>
+        <button className="btn btn-dark wide" type="button" disabled={busy || !status} onClick={importModel}><FolderOpen size={15} /> Model klasörünü seç…</button>
+      </details>
     </div>}
-    <div className="property-grid">
-      <button className="btn btn-primary wide" type="button" disabled={busy || blocker !== null} title={blocker ?? undefined} onClick={separate}>{phase === 'separate' ? <LoaderCircle size={15} className="vc-spin" /> : <Music2 size={15} />} 3 · Ayrıştır</button>
+
+    {ready && <>
+      <button className="btn btn-dark wide" type="button" disabled={busy} onClick={pickSource}>{source ? 'Dosyayı değiştir' : '1 · Ses veya video dosyası seç'}</button>
+      <p className="vc-trim-name" title={source}>{source ? `${baseName(source)} · ${(duration / 60).toFixed(1)} dk` : 'Seçilmedi'}</p>
+      <fieldset className="property-grid" disabled={busy} aria-label="Kaydedilecek çıktılar">
+        {OUTPUTS.map(o => <label key={o.id} className="checkbox-row"><input type="checkbox" checked={picked.includes(o.id)} onChange={() => toggle(o.id)} /> {o.label}</label>)}
+      </fieldset>
+      <label className="field">Çıktı biçimi<select value={format} disabled={busy} onChange={e => setFormat(e.target.value as typeof format)}>{FORMATS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}</select></label>
+      <p className="vc-trim-hint">Kaydedilecek yer: {outDir ? <code>{outDir}</code> : 'dosyanın yanında “… (ayrıştırılmış)” adlı yeni bir klasör'}. <button type="button" className="btn btn-dark" disabled={busy} onClick={pickFolder}><FolderOpen size={14} /> Başka klasör seç</button>{outDir && <> <button type="button" className="btn btn-dark" disabled={busy} onClick={() => setOutDir('')}>Otomatik yap</button></>}</p>
+    </>}
+
+    {busy && phase && <div role="progressbar" aria-label={step} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
+      <progress max={100} value={progress} style={{ width: '100%' }} />
+      <p className="vc-trim-hint">{step}… %{progress}</p>
+    </div>}
+    {ready && <div className="property-grid">
+      <button className="btn btn-primary wide" type="button" disabled={busy || blocker !== null} title={blocker ?? undefined} onClick={separate}>{phase === 'separate' ? <LoaderCircle size={15} className="vc-spin" /> : <Music2 size={15} />} 2 · Ayrıştır</button>
       <button className="btn btn-dark wide" type="button" disabled={!busy} onClick={() => void invoke('stems_cancel')}><X size={15} />İptal</button>
-    </div>
-    {!busy && blocker && <p className="vc-trim-hint">{blocker}</p>}
+    </div>}
+    {!busy && ready && blocker && <p className="vc-trim-hint">{blocker}</p>}
     {message && <p role={isError ? 'alert' : 'status'} className={`vc-trim-result ${isError ? 'vc-trim-error' : ''}`}>{message}</p>}
-    <p className="vc-trim-hint">Süre: işlem CPU'da yapılır ve ses süresinden uzun sürer; bilgisayara göre değişir. En çok {status?.maxMinutes ?? 8} dakikalık kayıtlar (bellek sınırı). Hazır olduğunda çıktı klasöründe <code>ad_vokal.wav</code> gibi dosyalar oluşur.</p>
+    {resultFolder && !busy && <button className="btn btn-primary wide" type="button" onClick={() => void invoke('stems_open_folder', { path: resultFolder })}><FolderOpen size={15} /> Klasörü aç</button>}
+    <p className="vc-trim-hint">İşlem bilgisayarın işlemcisinde yapılır ve ses süresinden uzun sürebilir; pencereyi kapatmadan bekle. En çok {status?.maxMinutes ?? 8} dakikalık kayıtlar ayrıştırılır.</p>
   </section>;
 }

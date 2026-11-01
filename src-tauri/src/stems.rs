@@ -401,13 +401,16 @@ fn write_output(channels: &[&[Vec<f32>]], gain: f32, temp: &Path, codec: &[&str]
     Ok(())
 }
 
-pub(crate) fn separate_file(base: &Path, input: &str, out_dir: &str, outputs: &[String], format: &str, cancel: &AtomicBool, on_progress: &mut dyn FnMut(f64)) -> Result<String, String> {
+pub(crate) fn separate_file(base: &Path, input: &str, out_dir: &str, outputs: &[String], format: &str, cancel: &AtomicBool, on_progress: &mut dyn FnMut(f64)) -> Result<(String, PathBuf), String> {
     let (ext, codec) = format_of(format)?;
-    if !engine_installed(base) { return Err("ONNX Runtime motoru kurulu değil. Önce 'Motoru indir' düğmesini kullan.".into()); }
-    if !model_installed(base) { return Err("Ayrıştırma modeli kurulu değil. Önce 'Modeli indir' veya 'Yerel klasörden al' düğmesini kullan.".into()); }
+    if !engine_installed(base) { return Err("ONNX Runtime motoru kurulu değil. Önce 'Kurulumu tamamla' düğmesini kullan.".into()); }
+    if !model_installed(base) { return Err("Ayrıştırma modeli kurulu değil. Önce 'Kurulumu tamamla' düğmesini kullan.".into()); }
     if !Path::new(input).is_absolute() || !Path::new(input).is_file() { return Err("Kaynak dosya bulunamadı.".into()); }
-    let dir = Path::new(out_dir);
-    if !dir.is_absolute() || !dir.is_dir() { return Err("Çıktı klasörü bulunamadı.".into()); }
+    let stem = safe_name(Path::new(input).file_stem().and_then(|s| s.to_str()).unwrap_or("ses"));
+    // Çıktı klasörü boşsa: kaynağın yanında "<ad> (ayrıştırılmış)" klasörü (başarıyla ayrıştırılınca oluşturulur).
+    let auto = out_dir.trim().is_empty();
+    let dir: PathBuf = if auto { Path::new(input).parent().ok_or("Kaynak klasörü bulunamadı.")?.join(format!("{stem} (ayrıştırılmış)")) } else { PathBuf::from(out_dir) };
+    if !auto && (!dir.is_absolute() || !dir.is_dir()) { return Err("Çıktı klasörü bulunamadı.".into()); }
     if outputs.is_empty() { return Err("En az bir çıktı seç.".into()); }
     let mut picks: Vec<(&str, &[usize])> = Vec::new();
     for id in outputs {
@@ -418,7 +421,6 @@ pub(crate) fn separate_file(base: &Path, input: &str, out_dir: &str, outputs: &[
     if !has_audio { return Err("Kaynakta ses akışı yok.".into()); }
     if duration > MAX_SECONDS { return Err(format!("Bu sürümde en çok {} dakikalık kayıtlar ayrıştırılır (bellek sınırı); dosyayı parçalara bölün.", (MAX_SECONDS / 60.0) as u32)); }
     if duration < 1.0 { return Err("Kayıt çok kısa (en az 1 sn).".into()); }
-    let stem = safe_name(Path::new(input).file_stem().and_then(|s| s.to_str()).unwrap_or("ses"));
     let targets: Vec<PathBuf> = picks.iter().map(|(id, _)| dir.join(format!("{stem}_{id}.{ext}"))).collect();
     if let Some(t) = targets.iter().find(|t| t.exists()) { return Err(format!("Bu dosya zaten var, üzerine yazılmaz: {}", t.display())); }
 
@@ -427,6 +429,7 @@ pub(crate) fn separate_file(base: &Path, input: &str, out_dir: &str, outputs: &[
     if audio[0].len() as f64 / SAMPLE_RATE as f64 > MAX_SECONDS + 1.0 { return Err("Kayıt çok uzun.".into()); }
     let stems = separate_audio(base, &audio, cancel, on_progress)?;
     drop(audio);
+    if auto { fs::create_dir_all(&dir).map_err(|e| format!("Çıktı klasörü oluşturulamadı: {e}"))?; }
     let nonce = SystemTime::now().duration_since(UNIX_EPOCH).map_err(|e| e.to_string())?.as_nanos();
     let mut done = Vec::new();
     let result: Result<(), String> = (|| {
@@ -445,8 +448,9 @@ pub(crate) fn separate_file(base: &Path, input: &str, out_dir: &str, outputs: &[
         }
         Ok(())
     })();
-    if let Err(e) = result { for f in &done { let _ = fs::remove_file(f); } return Err(e); }
-    Ok(format!("{} dosya kaydedildi ({:.1} sn): {}", done.len(), duration, done.iter().filter_map(|p| p.file_name().and_then(|n| n.to_str())).collect::<Vec<_>>().join(", ")))
+    if let Err(e) = result { for f in &done { let _ = fs::remove_file(f); } if auto { let _ = fs::remove_dir(&dir); } return Err(e); }
+    let message = format!("{} dosya kaydedildi ({:.1} sn): {}", done.len(), duration, done.iter().filter_map(|p| p.file_name().and_then(|n| n.to_str())).collect::<Vec<_>>().join(", "));
+    Ok((message, dir))
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -560,10 +564,18 @@ pub async fn stems_import_model(app: tauri::AppHandle, from: String) -> Result<S
 
 /// `outputs`: "vokal", "eslik" (davul+bas+diğer), "davul", "bas", "diger". `format`: wav / mp3 / flac. Dosyalar `<ad>_<çıktı>.<uzantı>`.
 #[tauri::command]
-pub async fn stems_separate(app: tauri::AppHandle, input_path: String, out_dir: String, outputs: Vec<String>, format: String) -> Result<String, String> {
+pub async fn stems_separate(app: tauri::AppHandle, input_path: String, out_dir: String, outputs: Vec<String>, format: String) -> Result<serde_json::Value, String> {
     CANCEL.store(false, Ordering::SeqCst);
     let base = data_dir(&app)?;
-    tauri::async_runtime::spawn_blocking(move || separate_file(&base, &input_path, &out_dir, &outputs, &format, &CANCEL, &mut reporter(app, "separate"))).await.map_err(|e| e.to_string())?
+    tauri::async_runtime::spawn_blocking(move || separate_file(&base, &input_path, &out_dir, &outputs, &format, &CANCEL, &mut reporter(app, "separate")).map(|(message, folder)| serde_json::json!({ "message": message, "folder": folder.to_string_lossy() }))).await.map_err(|e| e.to_string())?
+}
+
+/// Çıktı klasörünü Windows Gezgini'nde açar (yalnız var olan, mutlak bir klasör).
+#[tauri::command]
+pub fn stems_open_folder(path: String) -> Result<(), String> {
+    let p = Path::new(&path);
+    if !p.is_absolute() || !p.is_dir() { return Err("Klasör bulunamadı.".into()); }
+    Command::new("explorer.exe").arg(p).spawn().map(|_| ()).map_err(|e| format!("Gezgin açılamadı: {e}"))
 }
 
 #[tauri::command]
@@ -689,7 +701,7 @@ mod tests {
         let out = base.join("cikti"); fs::create_dir_all(&out).unwrap();
         let t0 = std::time::Instant::now();
         let mut last = 0.0;
-        let msg = separate_file(&base, refs.join("karisim.wav").to_str().unwrap(), out.to_str().unwrap(), &["vokal".into(), "eslik".into(), "davul".into()], "wav", &no, &mut |p| last = p).expect("ayrıştırma başarısız");
+        let msg = separate_file(&base, refs.join("karisim.wav").to_str().unwrap(), out.to_str().unwrap(), &["vokal".into(), "eslik".into(), "davul".into()], "wav", &no, &mut |p| last = p).expect("ayrıştırma başarısız").0;
         let secs = t0.elapsed().as_secs_f64();
         eprintln!("{msg}\nsüre: {secs:.1} sn (16 sn ses), son ilerleme %{last}");
         let dec = |p: &Path| decode(p.to_str().unwrap()).unwrap();

@@ -30,7 +30,7 @@ Otomatik altyazı (Whisper) isteğe bağlıdır ve pakette **yoktur**: Altyazı 
 |---|---|
 | **Tasarım** | Metin / şekil / görsel katmanları, sürükle-boyutlandır-döndür, 13 özgün şablon, hazır tuval boyutları, PNG / JPEG / WebP çıktı |
 | **Video** | Çok klipli birleştirme (≤ 50 klip), 12 geçiş türü, klip başına renk ayarı, ilerleme + iptal, MP4 (H.264 + AAC) |
-| **Ses** | 8 ek kanal, seviye / pan / fade / sustur / solo, konuşurken müzik kısma (ducking), dalga formu, MP4 / WAV / MP3 / FLAC, gürültü temizleme (klasik veya **yapay zekâ / RNNoise**, A/B dinleme), klasik vokal azaltma |
+| **Ses** | 8 ek kanal, seviye / pan / fade / sustur / solo, konuşurken müzik kısma (ducking), dalga formu, MP4 / WAV / MP3 / FLAC, gürültü temizleme (klasik veya **yapay zekâ / RNNoise**, A/B dinleme), klasik vokal azaltma, **yapay zekâ ile ayrıştırma** (vokal / eşlik / davul / bas / diğer; Demucs, tek tıkla kurulum) |
 | **Altyazı** | Elle düzenleme, SRT / VTT içe-dışa aktarma, videoya yakma (yazı tipi, renk, kontur, kutu), **Whisper ile yerel otomatik altyazı** |
 | **Proje** | Geri al / yinele, otomatik kayıt, kurtarma, taşınabilir `.voxcut` paketi + yedekler, taşınmış medyayı yeniden bağlama |
 | **Komutla düzenleme** | "Altyazıyı 2 sn ileri al" gibi Türkçe cümleler: önce plan, onayınızla uygulanır, geri alınabilir (yapay zekâ kullanmaz) |
