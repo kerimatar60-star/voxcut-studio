@@ -53,7 +53,7 @@ export function StemPanel() {
   const ready = !!status?.engineInstalled && !!status?.modelInstalled;
   const tooLong = status ? duration / 60 > status.maxMinutes : false;
   const blocker = !ready ? 'Önce kurulumu tamamla.' : !source ? 'Önce bir dosya seç.' : tooLong ? `Bu sürümde en çok ${status?.maxMinutes} dakikalık kayıtlar ayrıştırılır.` : picked.length === 0 ? 'En az bir çıktı seç.' : null;
-  const totalSize = (status ? (status.engineInstalled ? 0 : status.engineSize) + (status.modelInstalled ? 0 : status.modelSize) : 0);
+  const totalSize = status && !status.engineInstalled ? status.engineSize : 0;
 
   async function run<T>(next: Phase, label: string, work: () => Promise<T>): Promise<T | undefined> {
     setPhase(next); setStep(label); setProgress(0); setMessage(''); setIsError(false);
@@ -62,21 +62,17 @@ export function StemPanel() {
     finally { setPhase(null); }
   }
 
-  /** Motor ve modeli sırayla kurar; ilk hatada durur. */
+  /** Normalde her şey kurulum paketiyle gelir; yalnız eksikse motoru resmî kaynaktan indirir. Model eksikse yeniden kurmayı önerir. */
   async function installAll() {
     setResultFolder('');
-    let s = status;
-    if (s && !s.engineInstalled) {
-      const ok = await run('engine', 'Adım 1/2: motor indiriliyor', () => invoke<string>('stems_install_engine'));
-      s = await refresh();
+    if (status && !status.engineInstalled) {
+      const ok = await run('engine', 'Motor indiriliyor', () => invoke<string>('stems_install_engine'));
+      const s = await refresh();
       if (!ok || !s?.engineInstalled) return;
     }
-    if (s && !s.modelInstalled) {
-      const ok = await run('model', 'Adım 2/2: model indiriliyor', () => invoke<string>('stems_install_model'));
-      s = await refresh();
-      if (!ok) return;
-    }
-    setMessage('Kurulum tamamlandı. Şimdi bir dosya seçebilirsin.'); setIsError(false);
+    const s = await refresh();
+    if (s && !s.modelInstalled) { setIsError(true); setMessage('Model dosyası bu kurulumda eksik. En kolay çözüm: VoxCut Studio kurulum dosyasını yeniden çalıştırmak. (Model dosyan bir klasördeyse "Gelişmiş" bölümünden seçebilirsin.)'); return; }
+    setMessage('Hazır. Şimdi bir dosya seçebilirsin.'); setIsError(false);
   }
   async function importModel() {
     try {
@@ -115,8 +111,8 @@ export function StemPanel() {
     <p className="vc-trim-hint">Bir şarkıyı veya kaydı vokal, davul, bas ve diğer seslere ayırır. Her şey bu bilgisayarda çalışır; ses internete gönderilmez. Sonuç kusursuz değildir: sesler arasında hafif sızıntı olabilir. Kaynak dosya değişmez; çıktılar yeni dosyalardır.</p>
 
     {!ready && <div className="vc-trim-panel">
-      <p className="vc-trim-hint"><strong>Bir kerelik kurulum gerekli.</strong> Yapay zekâ motoru ve modeli indirilecek{status ? ` (toplam ≈ ${formatBytes(totalSize)})` : ''}. İndirmeler resmî kaynaklardan yapılır ve doğrulanır. Düğmeye bastığında onaylamış olursun.</p>
-      <button className="btn btn-primary wide" type="button" disabled={busy || !status} onClick={installAll}>{busy ? <LoaderCircle size={15} className="vc-spin" /> : <Download size={15} />} Kurulumu tamamla</button>
+      <p className="vc-trim-hint"><strong>Yapay zekâ dosyaları bu kurulumda eksik görünüyor.</strong> En kolay çözüm, VoxCut Studio kurulum dosyasını yeniden çalıştırmaktır. Motor eksikse aşağıdaki düğme onu resmî kaynaktan indirir{status ? ` (≈ ${formatBytes(totalSize)})` : ''}; model dosyası indirilemez, kurulumla gelir.</p>
+      <button className="btn btn-primary wide" type="button" disabled={busy || !status} onClick={installAll}>{busy ? <LoaderCircle size={15} className="vc-spin" /> : <Download size={15} />} Eksikleri tamamla</button>
       <details>
         <summary className="vc-trim-hint">Gelişmiş: model dosyası bende var</summary>
         <p className="vc-trim-hint">Model dosyalarını (<code>htdemucs.onnx</code> ve <code>htdemucs.onnx.data</code>) bir klasöre koyduysan buradan alabilirsin. Önce motor kurulmuş olmalı.</p>

@@ -3,7 +3,7 @@ import { friendlyError } from './stems';
 
 describe('friendlyError', () => {
   it('404 hatasını anlaşılır bir cümleye çevirir', () => {
-    expect(friendlyError('İndirme başarısız: curl: (22) The requested URL returned error: 404')).toContain('henüz yayımlanmamış');
+    expect(friendlyError('İndirme başarısız: curl: (22) The requested URL returned error: 404')).toContain('bulunamadı (404)');
   });
   it('ağ hatasında bağlantıyı kontrol etmeyi söyler ve özgün metni korur', () => {
     const t = friendlyError('curl: (6) Could not resolve host: github.com');

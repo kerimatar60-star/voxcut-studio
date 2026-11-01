@@ -119,11 +119,12 @@ pub fn run() {
             use tauri::Manager;
             if let Ok(dir) = app.path().resource_dir() {
                 if let Some(path) = path_with_bundled(&dir, std::env::var_os("PATH")) { std::env::set_var("PATH", path); }
+                stems::init_bundled(dir.join("stems"));
             }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            trim_video, audio_mix::mix_video_audio, audio_mix::inspect_mix_media, project_io::read_project_file, project_io::write_project_file, subtitle_burn::burn_subtitles, library_db::recent_projects_list, library_db::recent_projects_touch, library_db::recent_projects_forget, media_fingerprint::file_fingerprint, media_fingerprint::find_moved_media, media_access::authorize_media, media_access::read_image_bytes, package_io::write_package, package_io::read_package, package_io::list_backups, package_io::restore_backup, package_media::collect_media, export_io::save_export_file, timeline_render::render_timeline, timeline_render::cancel_timeline_render, tool_check::check_tools, waveform::waveform_peaks, audio_denoise::denoise_audio, audio_denoise::denoise_ai_status, audio_denoise::denoise_ai_install, stems::stems_status, stems::stems_install_engine, stems::stems_install_model, stems::stems_import_model, stems::stems_separate, stems::stems_cancel, stems::stems_open_folder, audio_denoise::denoise_preview_dir, asr::asr_status, asr::asr_install_engine, asr::asr_install_model, asr::asr_transcribe, asr::asr_cancel, audio_center::split_center
+            trim_video, audio_mix::mix_video_audio, audio_mix::inspect_mix_media, project_io::read_project_file, project_io::write_project_file, subtitle_burn::burn_subtitles, library_db::recent_projects_list, library_db::recent_projects_touch, library_db::recent_projects_forget, media_fingerprint::file_fingerprint, media_fingerprint::find_moved_media, media_access::authorize_media, media_access::read_image_bytes, package_io::write_package, package_io::read_package, package_io::list_backups, package_io::restore_backup, package_media::collect_media, export_io::save_export_file, timeline_render::render_timeline, timeline_render::cancel_timeline_render, tool_check::check_tools, waveform::waveform_peaks, audio_denoise::denoise_audio, audio_denoise::denoise_ai_status, audio_denoise::denoise_ai_install, stems::stems_status, stems::stems_install_engine, stems::stems_import_model, stems::stems_separate, stems::stems_cancel, stems::stems_open_folder, audio_denoise::denoise_preview_dir, asr::asr_status, asr::asr_install_engine, asr::asr_install_model, asr::asr_transcribe, asr::asr_cancel, audio_center::split_center
         ])
         .run(tauri::generate_context!())
         .expect("VoxCut Studio baslatilamadi");

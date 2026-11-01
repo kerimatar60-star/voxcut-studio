@@ -41,7 +41,9 @@ static AI_CANCEL: AtomicBool = AtomicBool::new(false);
 fn rnn_model(id: &str) -> Result<&'static RnnModel, String> { RNN_MODELS.iter().find(|m| m.id == id).ok_or_else(|| "Bilinmeyen yapay zekâ modeli.".to_string()) }
 
 fn models_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
-    Ok(app.path().app_data_dir().map_err(|e| format!("Uygulama veri klasörü bulunamadı: {e}"))?.join("denoise").join("models"))
+    let downloaded = app.path().app_data_dir().map_err(|e| format!("Uygulama veri klasörü bulunamadı: {e}"))?.join("denoise").join("models");
+    // Kurulum paketiyle gelen modeller eksiksizse onlar kullanılır (indirme gerekmez).
+    Ok(match crate::stems::bundled_dir() { Some(b) if RNN_MODELS.iter().all(|m| installed(b, m)) => b.to_path_buf(), _ => downloaded })
 }
 
 fn installed(dir: &Path, m: &RnnModel) -> bool { fs::metadata(dir.join(m.file)).is_ok_and(|md| md.is_file() && md.len() == m.size) }

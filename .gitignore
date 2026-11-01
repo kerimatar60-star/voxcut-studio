@@ -36,3 +36,7 @@ src-tauri/resources/ffmpeg/*
 
 # gecici tarayici test ciktilari
 .playwright-mcp/
+
+# yapay zeka dosyalari (fetch-stems.ps1 ile iner)
+src-tauri/resources/stems/*
+!src-tauri/resources/stems/.gitkeep

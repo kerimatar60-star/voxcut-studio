@@ -17,12 +17,12 @@ Hesap yok, abonelik yok, bulut yok: dosyalarınız bilgisayarınızda kalır.
 
 ## İndirme ve kurulum
 
-1. [Releases](../../releases) sayfasından `VoxCut.Studio_..._x64-setup.exe` dosyasını indirin (GitHub dosya adındaki boşlukları nokta yapar). Windows 10/11 (64 bit).
+1. [Releases](../../releases) sayfasından **tek kurulum dosyasını** (`VoxCut.Studio_..._x64-setup.exe`, ≈ 176 MB) indirin. Windows 10/11 (64 bit). Yapay zekâ özellikleri (ses ayrıştırma, gürültü temizleme) ve FFmpeg dosyanın **içindedir**; ayrıca bir şey indirmenize gerek yok.
 2. Çalıştırın. Yönetici izni gerekmez; kullanıcı klasörünüze kurulur.
 3. **İmzasız:** Windows SmartScreen "bilinmeyen yayıncı" uyarısı verebilir. *Daha fazla bilgi → Yine de çalıştır*. Dosyanın bütünlüğünü Release notundaki SHA-256 ile karşılaştırabilirsiniz.
 4. FFmpeg setup içinde gelir; ayrıca kurmanız gerekmez.
 
-Otomatik altyazı (Whisper) isteğe bağlıdır ve pakette **yoktur**: Altyazı sekmesindeki "Motoru indir / Modeli indir" düğmelerine bastığınızda resmî kaynaktan iner (motor 9 MB, model 74 MB – 1,5 GB, SHA-256 doğrulanır).
+Yalnız otomatik altyazı (Whisper) isteğe bağlıdır ve pakette **yoktur**: Altyazı sekmesindeki "Motoru indir / Modeli indir" düğmelerine bastığınızda resmî kaynaktan iner (motor 9 MB, model 74 MB – 1,5 GB, SHA-256 doğrulanır).
 
 ## Neler var
 

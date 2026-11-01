@@ -6,6 +6,7 @@ use std::{
     path::{Path, PathBuf},
     process::{Command, Stdio},
     sync::atomic::{AtomicBool, Ordering},
+    sync::OnceLock,
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -25,8 +26,8 @@ const ORT_SHA256: &str = "5869e26bb25314375f2d5ef1877e3ea06b1543d6c710e6e4a1ec2f
 const ORT_ZIP_DIR: &str = "onnxruntime-win-x64-1.31.1";
 const ORT_FILES: [&str; 2] = ["onnxruntime.dll", "onnxruntime_providers_shared.dll"];
 
-/// Dönüştürülmüş model (iki dosya aynı klasörde durmalı: ONNX, ağırlıkları `.data` dosyasından okur).
-const MODEL_URL_BASE: &str = "https://github.com/kerimatar60-star/voxcut-studio/releases/download/modeller-1/";
+/// Dönüştürülmüş model (iki dosya aynı klasörde durmalı: ONNX, ağırlıkları `.data` dosyasından okur). Kurulum paketiyle gelir;
+/// ayrıca indirilmez (yalnız geliştirici derlemelerinde "klasörden al" ile kurulabilir).
 const MODEL_FILES: [(&str, u64, &str); 2] = [
     ("htdemucs.onnx", 2_458_228, "04680f424ba8232b408e6a7d83d9f12a7cc4a4249176c0ded5d974e5c8e36101"),
     ("htdemucs.onnx.data", 168_293_632, "e8b687ed0a8506a8b2627b68fc5eb27ce401323f054b1465b5903ae8b7fcd5dc"),
@@ -47,13 +48,24 @@ const OUTPUTS: [(&str, &[usize]); 5] = [("vokal", &[3]), ("eslik", &[0, 1, 2]), 
 
 static CANCEL: AtomicBool = AtomicBool::new(false);
 
-fn engine_dir(base: &Path) -> PathBuf { base.join("engine") }
-fn model_dir(base: &Path) -> PathBuf { base.join("model") }
+/// Kurulum paketiyle gelen yapay zekâ dosyalarının klasörü (`<kurulum>\stems`); uygulama açılırken bir kez ayarlanır.
+static BUNDLED: OnceLock<PathBuf> = OnceLock::new();
+pub(crate) fn init_bundled(dir: PathBuf) { let _ = BUNDLED.set(dir); }
+pub(crate) fn bundled_dir() -> Option<&'static Path> { BUNDLED.get().map(PathBuf::as_path) }
+
+/// Paketle gelen klasör eksiksizse onu, değilse indirilen kopyanın klasörünü seçer (kullanıcıya hiçbir şey indirtmemek için).
+fn pick_dir(bundled: Option<&Path>, fallback: PathBuf, complete: impl Fn(&Path) -> bool) -> PathBuf {
+    match bundled { Some(b) if complete(b) => b.to_path_buf(), _ => fallback }
+}
+fn engine_complete(dir: &Path) -> bool { ORT_FILES.iter().all(|f| fs::metadata(dir.join(f)).is_ok_and(|m| m.is_file() && m.len() > 10_000)) }
+fn model_complete(dir: &Path) -> bool { MODEL_FILES.iter().all(|(n, s, _)| fs::metadata(dir.join(n)).is_ok_and(|m| m.is_file() && m.len() == *s)) }
+fn engine_dir(base: &Path) -> PathBuf { pick_dir(bundled_dir(), base.join("engine"), engine_complete) }
+fn model_dir(base: &Path) -> PathBuf { pick_dir(bundled_dir(), base.join("model"), model_complete) }
 fn engine_dll(base: &Path) -> PathBuf { engine_dir(base).join("onnxruntime.dll") }
 fn model_onnx(base: &Path) -> PathBuf { model_dir(base).join(MODEL_FILES[0].0) }
 
-fn engine_installed(base: &Path) -> bool { ORT_FILES.iter().all(|f| fs::metadata(engine_dir(base).join(f)).is_ok_and(|m| m.is_file() && m.len() > 10_000)) }
-fn model_installed(base: &Path) -> bool { MODEL_FILES.iter().all(|(n, s, _)| fs::metadata(model_dir(base).join(n)).is_ok_and(|m| m.is_file() && m.len() == *s)) }
+fn engine_installed(base: &Path) -> bool { engine_complete(&engine_dir(base)) }
+fn model_installed(base: &Path) -> bool { model_complete(&model_dir(base)) }
 
 // ---------------------------------------------------------------------------------------------------------------------
 // ONNX Runtime C API (yalnız gereken işlevler; indeksler `onnxruntime_c_api.h` içindeki OrtApi sırasından çıkarıldı)
@@ -483,24 +495,6 @@ pub(crate) fn install_engine(base: &Path, cancel: &AtomicBool, on_progress: &mut
     result
 }
 
-pub(crate) fn install_model(base: &Path, cancel: &AtomicBool, on_progress: &mut dyn FnMut(f64)) -> Result<String, String> {
-    if model_installed(base) { return Ok("Model zaten kurulu.".into()); }
-    let dir = model_dir(base);
-    fs::create_dir_all(&dir).map_err(|e| format!("Klasör oluşturulamadı: {e}"))?;
-    let total: u64 = MODEL_FILES.iter().map(|f| f.1).sum();
-    let mut before = 0u64;
-    for (name, size, sha) in MODEL_FILES {
-        let dest = dir.join(name);
-        if !fs::metadata(&dest).is_ok_and(|m| m.len() == size) {
-            let (b, t) = (before, total);
-            download(&format!("{MODEL_URL_BASE}{name}"), &dest, size, sha, cancel, &mut |pct| on_progress((b as f64 + pct / 100.0 * size as f64) / t as f64 * 100.0))
-                .map_err(|e| format!("{e} (Model adresi henüz yayımlanmamış olabilir; 'Yerel klasörden al' ile de kurabilirsin.)"))?;
-        }
-        before += size;
-    }
-    Ok("Ayrıştırma modeli indirildi ve doğrulandı.".into())
-}
-
 /// Kullanıcının seçtiği klasördeki model dosyalarını (htdemucs.onnx + .data) doğrular ve uygulama klasörüne kopyalar.
 pub(crate) fn import_model(base: &Path, from: &str, cancel: &AtomicBool, on_progress: &mut dyn FnMut(f64)) -> Result<String, String> {
     let src = Path::new(from);
@@ -546,13 +540,6 @@ pub async fn stems_install_engine(app: tauri::AppHandle) -> Result<String, Strin
     CANCEL.store(false, Ordering::SeqCst);
     let base = data_dir(&app)?;
     tauri::async_runtime::spawn_blocking(move || install_engine(&base, &CANCEL, &mut reporter(app, "engine"))).await.map_err(|e| e.to_string())?
-}
-
-#[tauri::command]
-pub async fn stems_install_model(app: tauri::AppHandle) -> Result<String, String> {
-    CANCEL.store(false, Ordering::SeqCst);
-    let base = data_dir(&app)?;
-    tauri::async_runtime::spawn_blocking(move || install_model(&base, &CANCEL, &mut reporter(app, "model"))).await.map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
@@ -637,6 +624,24 @@ mod tests {
     }
 
     #[test]
+    fn bundled_files_win_only_when_complete() {
+        let root = std::env::temp_dir().join(format!("voxcut stems paket {}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        let (bundled, fallback) = (root.join("stems"), root.join("indirilen"));
+        fs::create_dir_all(&bundled).unwrap();
+        assert_eq!(pick_dir(None, fallback.clone(), engine_complete), fallback, "paket yoksa indirilen klasör");
+        assert_eq!(pick_dir(Some(&bundled), fallback.clone(), engine_complete), fallback, "paket klasörü boşsa indirilen klasör");
+        for f in ORT_FILES { fs::write(bundled.join(f), vec![0u8; 20_000]).unwrap(); }
+        assert_eq!(pick_dir(Some(&bundled), fallback.clone(), engine_complete), bundled, "motor dosyaları tamamsa paket klasörü");
+        assert_eq!(pick_dir(Some(&bundled), fallback.clone(), model_complete), fallback, "model eksikse (yalnız motor var) model için indirilen klasör");
+        fs::write(bundled.join(ORT_FILES[1]), b"x").unwrap();
+        assert_eq!(pick_dir(Some(&bundled), fallback.clone(), engine_complete), fallback, "bozuk/kısa dosya tamam sayılmaz");
+        for (n, s, _) in MODEL_FILES { fs::File::create(bundled.join(n)).unwrap().set_len(s).unwrap(); }
+        assert_eq!(pick_dir(Some(&bundled), fallback.clone(), model_complete), bundled);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
     fn output_catalog_and_names_are_safe() {
         assert!(OUTPUTS.iter().all(|(id, src)| id.chars().all(|c| c.is_ascii_lowercase()) && src.iter().all(|s| *s < SOURCES)));
         assert_eq!(safe_name("şarkı: (final) ✓.mp3"), "şarkı___final____mp3");
@@ -644,7 +649,6 @@ mod tests {
         assert!(MODEL_FILES.iter().all(|(n, s, h)| n.starts_with("htdemucs") && *s > 1000 && h.len() == 64));
         assert!(ORT_URL.starts_with("https://github.com/microsoft/onnxruntime/releases/download/v1.31.1/"));
         assert_eq!(ORT_SHA256.len(), 64);
-        assert!(MODEL_URL_BASE.starts_with("https://github.com/kerimatar60-star/voxcut-studio/releases/download/"));
     }
 
     #[test]
