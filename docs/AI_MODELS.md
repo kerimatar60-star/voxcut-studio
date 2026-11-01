@@ -20,6 +20,10 @@
 
 ## 3. Müzik kaynak ayrıştırma
 
+- **[IMPLEMENTED, A57]** Demucs `htdemucs` (4 kaynak: davul, bas, diğer, vokal) + ONNX Runtime 1.31.1, CPU. Modeller: `htdemucs.onnx` 2 458 228 B (SHA-256 `04680f424ba8232b408e6a7d83d9f12a7cc4a4249176c0ded5d974e5c8e36101`) + `htdemucs.onnx.data` 168 293 632 B (SHA-256 `e8b687ed0a8506a8b2627b68fc5eb27ce401323f054b1465b5903ae8b7fcd5dc`). Barındırma adresi (henüz yayımlanmadı): `.../voxcut-studio/releases/download/modeller-1/`. Yayımlanana dek "Yerel klasörden al" kullanılır.
+- STFT/iSTFT Rust'ta uygulanır (torch ile aynı kurallar), parçalar 7,8 sn, %25 örtüşme. En çok 8 dakikalık kayıt (bellek). Ayrıntı: CHANGELOG A57.
+- Eski plan notları (aşağıda): 
+
 - Aday: Demucs ailesi (2 stems: vocals/instrumental; 4 stems: vocals/drums/bass/other), alternatif UVR ekosistemi.
 - Meta `facebookresearch/demucs` deposu **2025'te arşivlenmiş** ve yalnızca okunabilir; aktif bakım/fork/lisans ve Windows bağımlılıkları kontrol edilmeden dağıtıma gömme.
 - `adefossez/demucs` fork'u sınırlı bakım durumuyla incelenecek. Üçüncü taraf model ağırlıklarının lisansı kaynak kod lisansından ayrı kontrol edilir.

@@ -378,3 +378,6 @@ Her aşamayı PR/commit, ekran görüntüsü veya test çıktısı, tamamlanan i
 ## A55 — 2026-11-01 yapay zekâ ile gürültü temizleme (RNNoise)
 - [IMPLEMENTED + TESTED] Ses temizleme paneline "Yapay zekâ" yöntemi eklendi: RNNoise modelleri (≈ 0,3 MB, kullanıcı onayıyla iner, SHA-256 doğrulanır) FFmpeg `arnndn` ile çalışır. Gerçek model + SAPI konuşması + sabit gürültüyle ölçüm: yalnız-gürültü ≈ −20 dB, konuşma ≈ −0,3 dB. Rust 84 geçti + 3 yok sayılan, clippy 0, Vitest 165/165. Ayrıntı: CHANGELOG A55.
 - [PENDING] Masaüstü GUI'de elle deneme ve gerçek Türkçe kayıtta kulakla değerlendirme. **Yapay zekâ enstrüman/vokal ayrıştırma (stem) hâlâ [PLAN].**
+
+## A57 — 2026-11-01 yapay zekâ ile kaynak ayrıştırma (Demucs, ONNX Runtime)
+- [IMPLEMENTED] Ses sekmesinde vokal/eşlik/davul/bas/diğer ayrıştırma (stems.rs, StemPanel). Birim testler ve Python ölçümü (vokal SDR +10 dB) var. **[PENDING] Rust yolunun gerçek model + gerçek ONNX Runtime ile uçtan uca denemesi yapılmadı;** ilk gerçek deneme masaüstünde kullanıcı tarafından yapılacak. Ayrıntı: CHANGELOG A57.

@@ -66,7 +66,7 @@ fn find_engine(dir: &Path, depth: u32) -> Option<PathBuf> {
     None
 }
 
-fn sha256_file(path: &Path, cancel: &AtomicBool) -> Result<String, String> {
+pub(crate) fn sha256_file(path: &Path, cancel: &AtomicBool) -> Result<String, String> {
     let mut file = fs::File::open(path).map_err(|e| format!("Dosya açılamadı: {e}"))?;
     let mut hasher = Sha256::new();
     let mut buffer = vec![0u8; 1 << 20];
