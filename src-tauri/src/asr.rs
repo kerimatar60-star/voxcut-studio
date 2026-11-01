@@ -89,7 +89,7 @@ pub(crate) fn status(base: &Path) -> Status {
 
 /// Sabit HTTPS adresinden `curl.exe` (Windows 10 1803+ ile gelir) ile indirir; kabuk kullanılmaz, yalnız https ve en çok 5 yönlendirme.
 /// İlerleme için kısmi dosyanın boyutu izlenir. Bitince boyut + SHA-256 doğrulanır; eşleşmezse dosya silinir.
-fn download(url: &str, dest: &Path, size: u64, sha256: &str, cancel: &AtomicBool, on_progress: &mut dyn FnMut(f64)) -> Result<(), String> {
+pub(crate) fn download(url: &str, dest: &Path, size: u64, sha256: &str, cancel: &AtomicBool, on_progress: &mut dyn FnMut(f64)) -> Result<(), String> {
     let part = dest.with_extension("part");
     let _ = fs::remove_file(&part);
     let mut child = Command::new("curl.exe")

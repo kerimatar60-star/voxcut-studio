@@ -295,3 +295,7 @@
 
 - [TESTED / ben, 2026-10-31, gerçek kurulum] Setup sessiz kuruldu (`/S`, çıkış 0; kullanıcı başına, yönetici izni yok): `voxcut-studio.exe`, `ffmpeg\` (ffmpeg, ffprobe, 7 DLL) ve `licenses\` dosyaları yazıldı, kaldırma kaydı oluştu. Kurulu uygulama, **sistem PATH'inden FFmpeg gizlenerek** (PATH = yalnız System32) başlatıldı: pencere "VoxCut Studio", yanıt veriyor; açılış denetimi `ffmpeg -version` ve `ffprobe -version` komutlarını **kurulum klasöründeki** `ffmpeg\ffmpeg.exe` / `ffprobe.exe` ile çalıştırdı (süreç yolları gözlendi). Kaldırma (`uninstall.exe /S`) çıkış 0: dosyalar ve kaldırma kaydı silindi. Not: bu oturumun kabuğu sanal (paketlenmiş) bir yerel veri klasörü kullandığından kurulum gerçek kullanıcı klasörü yerine oraya yazıldı; gerçek klasörde iz kalmadı.
 - Hâlâ denenmedi: kullanıcının kendi hesabında normal çift tıklamayla kurulum (SmartScreen davranışı), Başlat menüsü kısayolunun görünümü, kurulu uygulamada Whisper indirme ve gerçek bir render.
+
+## A55 — 2026-11-01 yapay zekâ ile gürültü temizleme (RNNoise)
+- [IMPLEMENTED + TESTED] Ses temizleme paneline "Yapay zekâ" yöntemi eklendi: RNNoise modelleri (≈ 0,3 MB, kullanıcı onayıyla iner, SHA-256 doğrulanır) FFmpeg `arnndn` ile çalışır. Gerçek model + SAPI konuşması + sabit gürültüyle ölçüm: yalnız-gürültü ≈ −20 dB, konuşma ≈ −0,3 dB. Rust 84 geçti + 3 yok sayılan, clippy 0, Vitest 165/165. Ayrıntı: CHANGELOG A55.
+- [PENDING] Masaüstü GUI'de elle deneme ve gerçek Türkçe kayıtta kulakla değerlendirme. **Yapay zekâ enstrüman/vokal ayrıştırma (stem) hâlâ [PLAN].**

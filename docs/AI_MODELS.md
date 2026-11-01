@@ -16,6 +16,7 @@
 - İleri seviye: lisansı teyit edilmiş yerel denoise model(ler)i; model metadata, input sample rate ve gecikme gereksinimleri açık olsun.
 - Kullanıcı için A/B ses karşılaştırma, yoğunluk slider, çıtırtı/artifact uyarısı ve kaynak geri alma.
 - Enstrüman kaydını gürültüden temizlemek, müziği vokal/enstrüman stem'lerine ayırmaktan farklı işlemdir.
+- **[IMPLEMENTED, A55]** Yapay zekâ temizleme: RNNoise (tekrarlayan sinir ağı) modelleri FFmpeg `arnndn` süzgeciyle çalışır; ek bağımlılık yok. Modeller yalnız kullanıcı "Modeli indir"e basınca iner. Klasik yöntem ayrı bir seçenek olarak kalır (AI etiketi yalnız RNNoise modunda).
 
 ## 3. Müzik kaynak ayrıştırma
 
@@ -59,5 +60,7 @@ Ui AI Dialog -> Local Job Queue -> Validation -> Model Registry -> Worker Adapte
 | ggml-base | aynı | 147 951 465 B | `60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe` |
 | ggml-small (önerilen) | aynı | 487 601 967 B | `1be3a9b2063867b937e64e2ec7483364a79917e157fa98c5d94b5c1fffea987b` |
 | ggml-medium | aynı | 1 533 763 059 B | `6c14d5adee5f86394037b4e4e8b59f1673b6cee10e3cf0b11bbdbee79c156208` |
+
+**RNNoise modelleri (A55):** kaynak `raw.githubusercontent.com/GregorR/rnnoise-models/3eee541a283fd3b8f81b85b1748e3b9ccbefa04d/` (commit sabit). `somnolent-hogwash-2018-09-01/sh.rnnn` ("konuşma", önerilen) 297 646 B, SHA-256 `70bb6685eb0c2a1d18e2918dca3fbfbd39317010b1802eb1b6ea73a92f3fdec0`; `marathon-prescription-2018-08-29/mp.rnnn` ("genel") 296 861 B, SHA-256 `4e84a448a4baf937992aaf4d10c8258007ec5d24219b6647dfd5fb4b563ad231`. Özetler indirilip yerelde ölçüldü.
 
 Özetler GitHub sürüm API'sinin `digest` alanından ve Hugging Face LFS `oid` alanından alındı; uygulama indirilen her dosyayı bu değerlerle karşılaştırır. Motor CPU sürümüdür (CUDA sürümü ~685 MB olduğu için kullanılmıyor; ileride isteğe bağlı eklenebilir). Lisanslar: whisper.cpp MIT, OpenAI Whisper ağırlıkları MIT.

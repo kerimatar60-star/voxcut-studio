@@ -25,6 +25,7 @@ TypeScript (Apache-2.0), Vite (MIT), Vitest (MIT), `@vitejs/plugin-react` (MIT),
 | **FFmpeg / FFprobe** | **Kurulum paketine gömülüdür** (BtbN `win64-gpl-shared`, n9.0.2-39-g7adfbe40dc; ayrı süreç olarak çalıştırılır, değiştirilmez). Kullanıcı isterse kendi kurulumunu PATH'e koyabilir. | **GNU GPL v3** (libx264 dahil). Lisans metni: `licenses\FFMPEG-LICENSE.txt`; kaynak ve sürüm bilgisi: `licenses\FFMPEG-NOTICE.txt`. Bu nedenle kurulum paketini dağıtan kişi GPL yükümlülüklerini (lisans metni, kaynak erişimi) sağlamalıdır. |
 | **whisper.cpp** (`ggml-org/whisper.cpp`, sürüm etiketi b5454, `whisper-bin-x64.zip`) | Kullanıcı Altyazı sekmesinde onaylayınca indirilir; uygulama veri klasörüne kurulur. | MIT |
 | **Whisper ggml modelleri** (`ggerganov/whisper.cpp`, Hugging Face) | Kullanıcı seçip onaylayınca indirilir. | OpenAI Whisper ağırlıkları MIT |
+| **RNNoise modelleri** (`GregorR/rnnoise-models`, `sh.rnnn` ve `mp.rnnn`, ≈ 0,3 MB) | Ses sekmesinde "Yapay zekâ" yöntemini seçip "Modeli indir"e basınca indirilir; FFmpeg `arnndn` süzgeci çalıştırır. Adres tek bir commit'e sabittir. | Depo sahibi: "hiçbir parçası telif hakkına tabi değildir" (README). Üretim araçları (`tools/`) kullanılmaz. RNNoise yöntemi BSD-3 |
 
 İndirilen her dosyanın kaynağı, boyutu ve SHA-256 özeti `docs/AI_MODELS.md` içindedir; uygulama bunları indirme sırasında doğrular.
 
