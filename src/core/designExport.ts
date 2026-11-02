@@ -96,7 +96,10 @@ export async function loadDesignImages(project: ProjectDocument, sources: Record
   return loaded;
 }
 
-export async function exportDesign(project: ProjectDocument, options: { format: ExportFormat; scale: number; imageSources?: Record<string, string> }): Promise<string> {
+export type RenderedDesign = { blob: Blob; width: number; height: number; name: string; label: string };
+
+/** Tasarımı seçilen biçimde üretir (kaydetmeden). Önizleme ile dışa aktarma aynı çıktıyı kullanır. */
+export async function renderDesignBlob(project: ProjectDocument, options: { format: ExportFormat; scale: number; imageSources?: Record<string, string> }): Promise<RenderedDesign> {
   const spec = EXPORT_FORMATS.find(f => f.id === options.format) ?? EXPORT_FORMATS[0];
   const images = await loadDesignImages(project, options.imageSources ?? {});
   const canvas = renderDesign(project, options.scale, images);
@@ -104,12 +107,19 @@ export async function exportDesign(project: ProjectDocument, options: { format: 
     canvas.toBlob(blob => {
       if (!blob) { reject(new Error('Dosya oluşturulamadı.')); return; }
       if (blob.type !== spec.mime) { reject(new Error(`${spec.label.split(' ')[0]} biçimi bu ortamda desteklenmiyor; PNG kullan.`)); return; }
-      const name = designFileName(project.name, spec.id);
-      saveExport(blob, name, spec.label.split(' ')[0]).then(result => {
-        resolve(result.saved ? `${result.where === name ? name : result.where} (${canvas.width}×${canvas.height}, ${(blob.size / 1024).toFixed(0)} KB)` : '');
-      }, reject);
+      resolve({ blob, width: canvas.width, height: canvas.height, name: designFileName(project.name, spec.id), label: spec.label.split(' ')[0] });
     }, spec.mime, QUALITY);
   });
+}
+
+/** Üretilmiş görseli kaydeder; kaydedilen yeri ve boyutu metin olarak döndürür (kullanıcı vazgeçtiyse boş). */
+export async function saveRenderedDesign(r: RenderedDesign): Promise<string> {
+  const result = await saveExport(r.blob, r.name, r.label);
+  return result.saved ? `${result.where === r.name ? r.name : result.where} (${r.width}×${r.height}, ${(r.blob.size / 1024).toFixed(0)} KB)` : '';
+}
+
+export async function exportDesign(project: ProjectDocument, options: { format: ExportFormat; scale: number; imageSources?: Record<string, string> }): Promise<string> {
+  return saveRenderedDesign(await renderDesignBlob(project, options));
 }
 
 /** Eski üst çubuk düğmesi için: 1x PNG. */
