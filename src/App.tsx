@@ -16,6 +16,7 @@ import {useTheme} from './shared/useTheme';
 import {AudioMixPanel} from './features/audio/components/AudioMixPanel';
 import {DesignStage} from './features/design/components/DesignStage';
 import {DesignComingSoon} from './features/design/components/DesignComingSoon';
+import {CoverScreen} from './features/cover/components/CoverScreen';
 import {MediaLibrary} from './features/library/components/MediaLibrary';
 import {useMediaLibrary} from './features/library/useMediaLibrary';
 import {TopBar} from './features/projects/components/TopBar';
@@ -64,7 +65,7 @@ export default function App(){
   const asset=project.assets.find(a=>a.id===media.selectedAsset);
   const src=media.selectedAsset?media.urls[media.selectedAsset]:undefined;
   const exportImage=(format:ExportFormat,scale:number)=>{exportDesign(project,{format,scale,imageSources:media.imageSources}).then(info=>{if(info)setNotice(`Kaydedildi: ${info}`);}).catch(err=>setNotice(err instanceof Error?err.message:String(err)));};
-  const exportCurrent=()=>workspace==='design'?exportImage('png',1):workspace==='subtitles'?subs.exportSrt():setNotice(workspace==='video'?'MP4 kesmek için sağdaki Gerçek MP4 kesme panelini kullan.':'Ses miksli MP4 için sağdaki A26 ses panelini kullan. MP3 çıktısı henüz yok.');
+  const exportCurrent=()=>workspace==='design'?exportImage('png',1):workspace==='subtitles'?subs.exportSrt():workspace==='cover'?setNotice('Kapak için soldaki 1, 2, 3 adımlarını izle.'):setNotice(workspace==='video'?'MP4 kesmek için sağdaki Gerçek MP4 kesme panelini kullan.':'Ses miksli MP4 için sağdaki A26 ses panelini kullan. MP3 çıktısı henüz yok.');
   const pickMedia=()=>isTauri()?void media.addFromDialog():media.mediaInputRef.current?.click();
 
   return <div className="app">
@@ -87,6 +88,7 @@ export default function App(){
       {files.recovery&&<div className="notice"><Check size={15}/><span>Kaydedilmemiş önceki oturum bulundu.</span><button style={{fontSize:12}} onClick={files.restoreRecovery}>Geri yükle</button><button style={{fontSize:12}} onClick={files.clearRecovery}>Sil</button></div>}
       {notice && <div className="notice"><Check size={15}/><span>{notice}</span><button onClick={()=>setNotice('')}>×</button></div>}
       <div className="workspace">
+        {workspace==='cover'?<CoverScreen setNotice={setNotice}/>:<>
         <section className="panel left-panel">
           <div className="panel-heading"><div><span className="eyebrow">ÇALIŞMA ALANI</span><h2>{tabs.find(t=>t.id===workspace)?.label} Stüdyosu</h2></div><Settings2 size={18} className="muted-icon"/></div>
           {workspace==='design'&&<DesignComingSoon/>}
@@ -116,6 +118,8 @@ export default function App(){
           <CommandPanel project={project} update={update} onApplied={setNotice} onUndo={history.undo}/>
           <div className="properties-footer"><WandSparkles size={15}/> AI modelleri isteğe bağlı kurulacak.</div>
         </aside>
+      
+        </>}
       </div>
       <footer className="statusbar"><span><span className="status-online"/> Yerel oturum</span><span><BookOpen size={13}/> Kılavuz: README.md</span><span className="footer-right"><Mic2 size={13}/> Yapay zekâ ayrıştırma planlandı <span className="sep">•</span> <Scissors size={13}/> Birleştirme ve kesme hazır</span></footer>
     </main>
