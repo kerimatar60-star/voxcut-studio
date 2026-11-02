@@ -14,7 +14,7 @@ import {useTheme} from './shared/useTheme';
 import {AudioMixPanel} from './features/audio/components/AudioMixPanel';
 import {DesignStage} from './features/design/components/DesignStage';
 import {PreviewDialog} from './features/preview/components/PreviewDialog';
-import {AiDesignPanel} from './features/design/components/AiDesignPanel';
+import {DesignNotice} from './features/design/components/DesignNotice';
 import {CoverScreen} from './features/cover/components/CoverScreen';
 import {MediaLibrary} from './features/library/components/MediaLibrary';
 import {useMediaLibrary} from './features/library/useMediaLibrary';
@@ -90,7 +90,7 @@ export default function App(){
         {workspace==='cover'?<CoverScreen setNotice={setNotice}/>:<>
         <section className="panel left-panel">
           <div className="panel-heading"><div><span className="eyebrow">ÇALIŞMA ALANI</span><h2>{tabs.find(t=>t.id===workspace)?.label} Stüdyosu</h2></div><Settings2 size={18} className="muted-icon"/></div>
-          {workspace==='design'&&<AiDesignPanel project={project} onApply={design=>update(p=>({...p,design}))} setNotice={setNotice}/>}
+          {workspace==='design'&&<DesignNotice/>}
           {(workspace==='video'||workspace==='audio')&&<MediaLibrary library={media.library} filter={media.filter} setFilter={media.setFilter} selectedAsset={media.selectedAsset} setSelectedAsset={media.setSelectedAsset} urls={media.urls} problems={media.problems} busy={media.busy} onPickFile={pickMedia} removeAsset={media.removeAsset} onRelink={id=>void media.relinkAsset(id)} onRelinkFolder={()=>void media.relinkFromFolder()}/>}
           {workspace==='subtitles'&&<SubtitleTools cues={project.subtitles} onAdd={subs.addCue} onExportSrt={subs.exportSrt} onExportVtt={subs.exportVtt} onImportClick={()=>subs.subtitleInputRef.current?.click()} onAutoResult={subs.importSrtText}/>}
           <div className="panel-bottom"><ShieldCheck size={16}/><div><strong>Önce yerel, sonra bulut</strong><span>Dosyalar izinsiz yüklenmez.</span></div></div>
