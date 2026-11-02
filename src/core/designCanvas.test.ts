@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { DESIGN_PRESETS, duplicateLayer, MAX_CANVAS, MIN_CANVAS, moveLayer, presetIdFor, resizeCanvas } from './designCanvas';
+import { DESIGN_PRESETS, MAX_CANVAS, MIN_CANVAS, presetIdFor, resizeCanvas } from './designCanvas';
 import { designFileName, exportSize } from './designExport';
-import { exampleProject, makeElement, parseProject, serializeProject } from './project';
+import { exampleProject, parseProject, serializeProject } from './project';
 
 const design = () => exampleProject().design;
 
@@ -35,32 +35,6 @@ describe('tuval hazır ayarları ve yeniden boyutlandırma', () => {
     const resized = { ...project, design: resizeCanvas(project.design, 1080, 1920) };
     const back = parseProject(JSON.parse(serializeProject(resized)));
     expect([back.design.width, back.design.height]).toEqual([1080, 1920]);
-  });
-});
-
-describe('katman sırası ve çoğaltma', () => {
-  const els = ['a', 'b', 'c'].map(id => ({ ...makeElement('rectangle'), id }));
-  const ids = (list: { id: string }[]) => list.map(e => e.id).join('');
-
-  it('yukarı/aşağı/öne/arkaya taşır; sınırda aynı diziyi döndürür', () => {
-    expect(ids(moveLayer(els, 'a', 'up'))).toBe('bac');
-    expect(ids(moveLayer(els, 'c', 'down'))).toBe('acb');
-    expect(ids(moveLayer(els, 'a', 'front'))).toBe('bca');
-    expect(ids(moveLayer(els, 'c', 'back'))).toBe('cab');
-    expect(moveLayer(els, 'c', 'up')).toBe(els);
-    expect(moveLayer(els, 'a', 'down')).toBe(els);
-    expect(moveLayer(els, 'yok', 'up')).toBe(els);
-  });
-
-  it('çoğaltma kopyayı hemen üstüne koyar, kaydırır, kimliği döndürür ve asıl diziyi değiştirmez', () => {
-    const { elements, id } = duplicateLayer(els, 'b', 'b2');
-    expect(id).toBe('b2');
-    expect(ids(elements)).toBe('abb2c');
-    expect(elements[2].x).toBe(els[1].x + 3);
-    expect(ids(els)).toBe('abc');
-    expect(duplicateLayer(els, 'yok', 'z')).toEqual({ elements: els, id: null });
-    const edge = duplicateLayer([{ ...els[0], x: 98, y: 98 }], 'a', 'a2').elements[1];
-    expect([edge.x, edge.y]).toEqual([99, 99]);
   });
 });
 

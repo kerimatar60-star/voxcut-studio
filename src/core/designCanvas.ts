@@ -29,28 +29,3 @@ export function resizeCanvas(design: Design, width: number, height: number): Des
   const elements: DesignElement[] = design.elements.map(e => ({ ...e, fontSize: Math.min(500, Math.max(8, Math.round(e.fontSize * ratio))) }));
   return { ...design, width: w, height: h, elements };
 }
-
-export type LayerMove = 'up' | 'down' | 'front' | 'back';
-
-/** Katman sırasını değiştirir (listenin sonu en üsttür). Taşınamıyorsa aynı diziyi döndürür. */
-export function moveLayer<T extends { id: string }>(elements: T[], id: string, move: LayerMove): T[] {
-  const from = elements.findIndex(e => e.id === id);
-  if (from < 0) return elements;
-  const to = move === 'up' ? from + 1 : move === 'down' ? from - 1 : move === 'front' ? elements.length - 1 : 0;
-  if (to < 0 || to >= elements.length || to === from) return elements;
-  const copy = elements.slice();
-  const [item] = copy.splice(from, 1);
-  copy.splice(to, 0, item);
-  return copy;
-}
-
-/** Katmanı hemen üstüne, biraz kaydırarak çoğaltır; yeni kimliği de döndürür. */
-export function duplicateLayer(elements: DesignElement[], id: string, newId: string): { elements: DesignElement[]; id: string | null } {
-  const index = elements.findIndex(e => e.id === id);
-  if (index < 0) return { elements, id: null };
-  const source = elements[index];
-  const copy: DesignElement = { ...source, id: newId, x: Math.min(99, source.x + 3), y: Math.min(99, source.y + 3) };
-  const next = elements.slice();
-  next.splice(index + 1, 0, copy);
-  return { elements: next, id: newId };
-}
