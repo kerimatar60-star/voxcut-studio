@@ -6,7 +6,7 @@ type Props={project:ProjectDocument;onSelectAsset:(id:string)=>void;onOpenSubtit
 /** Tasarımda katman listesi, diğer alanlarda (şimdilik görsel taslak) zaman çizelgesi. */
 export function Timeline({project,onSelectAsset,onOpenSubtitles}:Props){
   return <div className="timeline">
-    <div className="timeline-heading"><div><Clock3 size={17}/> <strong>Zaman Çizelgesi</strong><span className="timeline-count">{project.assets.length} öğe</span></div><span className="timeline-info">Görsel özet; klipleri sağdaki birleştirme panelinden düzenle</span></div>
+    <div className="timeline-heading"><div><Clock3 size={17}/> <strong>Zaman Çizelgesi</strong><span className="timeline-count">{project.assets.length} öğe</span></div><span className="timeline-info">Görsel özet; klipleri Video sekmesinde düzenlersin</span></div>
     <div className="tracks">
       <div className="time-ruler"><span>00:00</span><span>00:10</span><span>00:20</span><span>00:30</span><span>00:40</span><span>00:50</span></div>
       <div className="track-row"><span className="track-title"><Clapperboard size={14}/> Video</span><div className="track-line">{project.assets.filter(a=>a.kind==='video').map((a,i)=><button key={a.id} onClick={()=>onSelectAsset(a.id)} className="clip video-clip" style={{width:'28%',left:`${Math.min(70,i*30)}%`}}>{a.name}</button>)}</div></div>

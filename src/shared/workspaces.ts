@@ -1,8 +1,9 @@
-import {AudioLines,Clapperboard,ImagePlus,Subtitles} from 'lucide-react';
+import {AudioLines,Clapperboard,House,ImagePlus,Subtitles} from 'lucide-react';
 import type {LucideIcon} from 'lucide-react';
 import type {Workspace} from '../core/types';
 
 export const tabs:{id:Workspace;label:string;icon:LucideIcon;detail:string}[]=[
+  {id:'home',label:'Ana sayfa',icon:House,detail:'Ne yapmak istiyorsun?'},
   {id:'video',label:'Video',icon:Clapperboard,detail:'Ön izleme, sahne'},
   {id:'audio',label:'Ses',icon:AudioLines,detail:'Müzik, ses kanalları'},
   {id:'subtitles',label:'Altyazı',icon:Subtitles,detail:'Elle düzenle, SRT, videoya yaz'},

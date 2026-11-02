@@ -164,14 +164,14 @@ export function TimelinePanel({ timeline, onChange, loadToken, cues, mix }: Prop
     } catch (e) { report(e); } finally { setRendering(false); setBusy(false); }
   }
 
-  if (!isTauri()) return <p className="vc-trim-alert">Çok klipli birleştirme Tauri masaüstü uygulamasında çalışır.</p>;
+  if (!isTauri()) return <p className="vc-trim-alert">Videoları birleştirme yalnızca kurulu VoxCut Studio uygulamasında çalışır.</p>;
   const issueIds = Object.keys(issues);
   const locked = busy || rendering;
   const total = totalDuration(timeline.clips);
   const output = outputDuration(timeline.clips);
   const setOption = (key: 'burnSubtitles' | 'applyMix', on: boolean) => onChange(t => { const { [key]: _drop, ...rest } = t; return on ? { ...rest, [key]: true } : rest; });
   return <section className="vc-trim-panel vc-timeline" aria-label="Video zaman çizelgesi ve birleştirme">
-    <div className="vc-trim-heading"><Film size={16} /> Çok klipli birleştirme</div>
+    <div className="vc-trim-heading"><Film size={16} /> Videoları birleştir</div>
     <p className="vc-trim-hint">Klipleri ekle, sırala, her birinin kullanılacak aralığını ve aralarındaki geçişi ayarla, tek MP4 olarak kaydet. Farklı çözünürlük/kare hızı/sessiz klipler otomatik uyumlanır. Ayarlar projeyle kaydedilir; dosyalar projeye gömülmez.</p>
     {issueIds.length > 0 && <div role="alert" className="vc-warn"><strong>⚠ Eksik klip dosyası</strong>
       <button type="button" className="btn btn-primary" disabled={locked} onClick={relinkFromFolder}>Klasörde ara ve toplu bağla</button>

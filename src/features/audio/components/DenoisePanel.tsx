@@ -100,7 +100,7 @@ export function DenoisePanel() {
     } catch (e) { report(e); } finally { setBusy(false); }
   }
 
-  if (!isTauri()) return <p className="vc-trim-alert">Ses temizleme Tauri masaüstü uygulamasında çalışır.</p>;
+  if (!isTauri()) return <p className="vc-trim-alert">Ses temizleme yalnızca kurulu VoxCut Studio uygulamasında çalışır.</p>;
   return <section className="vc-trim-panel vc-denoise" aria-label="Ses temizleme">
     <div className="vc-trim-heading"><AudioLines size={16} /> Ses temizleme</div>
     <p className="vc-trim-hint">Fan, uğultu ve oda gürültüsünü azaltır. Çok gürültülü kayıtlarda mucize beklenmemeli; önce kısa örneği dinle.</p>

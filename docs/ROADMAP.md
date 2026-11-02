@@ -397,3 +397,12 @@ Her aşamayı PR/commit, ekran görüntüsü veya test çıktısı, tamamlanan i
 - [IMPLEMENTED] Önizleme penceresi artık yalnız Altyazı ve Video/Ses (katmanlı) içindir.
 - [TESTED] Vitest 154/154, Rust 97 geçti + 4 yok sayılan, clippy 0, build temiz; tarayıcıda 4 sekme ve her sekmede Dışa Aktar önizlemesi denendi.
 - [PENDING] Yeni arayüz önerisi (Ana sayfa, görev kartlı bölümler, Yardım turu): `docs/tasarim/yeni-arayuz-onerisi.html` sunuldu, kullanıcı onayı bekleniyor; uygulanmadı.
+
+## A62 — 2026-11-02 yeni arayüz: Ana sayfa, görev kartları, Yardım turu, sade dil (0.1.8)
+- [KULLANICI ONAYI] `docs/tasarim/yeni-arayuz-onerisi.html` tasarımı uygulandı ("Hepsini birlikte yap").
+- [IMPLEMENTED] **Ana sayfa** (açılış): "Ne yapmak istiyorsun?" 4 kart (Video, Ses, Altyazı, Kapak) + son projeler (masaüstü). Menüde "Ana sayfa" ilk sekme.
+- [IMPLEMENTED] **Görev kartları**: Video (Videoyu kes / Videoları birleştir) ve Ses (Gürültüyü azalt / Şarkıyı parçalara ayır / Vokali azalt / Ses ve müzik karıştır) sekmelerinde tek iş gösterilir; sağ panelde yalnız seçilen işin aracı görünür. Diğer işlerin panelleri gizlenir ama bellekte kalır (süren işlem ve ayarlar kaybolmaz). Her kartın altında "Bu ne işe yarar?" açıklaması.
+- [IMPLEMENTED] **Yardım turu** (3 adım): ilk açılışta bir kez (cihazda hatırlanır), üstteki ve alttaki "Yardım" ile ve ana sayfadaki düğmeyle yeniden açılır. Alt çubuk sadeleştirildi (dosyalar bu bilgisayarda · Yardım · kaydedildi/kaydedilmedi · sürüm). Sol alttaki sürekli duran "Önce yerel, sonra bulut" kutusu kaldırıldı.
+- [IMPLEMENTED] **Sade dil**: Tauri/FFmpeg/Fade/Solo/Sustur/Limiter/JSON Kaydet gibi ifadeler günlük Türkçeye çevrildi ("Videoyu kes", "Videoları birleştir", "Yavaş açılma/kapanma", "Yalnız bunu dinle", "Sesi kapat", "Projeyi kaydet", "yalnızca kurulu VoxCut Studio uygulamasında çalışır"). Kodda iç kod adları (örn. "A26") kullanıcıya gösterilmez.
+- [TESTED] Vitest 154/154, `tsc` + build temiz; tarayıcıda: açılış turu, ana sayfa kartları, görev kartı değişince panel değişimi, Dışa Aktar ana sayfada uyarı, 6 ekranda axe-core 0 ihlal. Rust değişmedi.
+- [PENDING] **Altyazı sekmesi görev kartlarına bölünmedi** (HTML önerisindeki 4 kart yok; mevcut düzen duruyor). Masaüstü penceresinde elle deneme yapılmadı (özellikle görev kartı geçişlerinde süren işlemler). Ses sekmesinde sağ panel hâlâ uzun olabilir (seçilen işin kendi ayarları).

@@ -180,7 +180,7 @@ export function AudioMixPanel({ mix, onChange, loadToken }: Props) {
     } catch (e) { report(e); } finally { setBusy(false); }
   }
 
-  if (!isTauri()) return <p className="vc-trim-alert">Çok kanallı miks Tauri masaüstü uygulamasında çalışır.</p>;
+  if (!isTauri()) return <p className="vc-trim-alert">Çok kanallı karıştırma yalnızca kurulu VoxCut Studio uygulamasında çalışır.</p>;
   const { tracks } = mix;
   const issueList = Object.entries(issues);
   return <section className="vc-trim-panel vc-mix" aria-label="Çok kanallı ses miks editörü">
@@ -191,7 +191,7 @@ export function AudioMixPanel({ mix, onChange, loadToken }: Props) {
       <li className={tracks.length ? 'now' : ''}>Ayarla</li>
       <li className={tracks.length && mix.videoPath ? 'now' : ''}>MP4 kaydet</li>
     </ol>
-    <p className="vc-trim-hint">Ayarlar <b>projeyle birlikte</b> kaydedilir (üstteki “JSON Kaydet”). Dosyaların kendisi projeye gömülmez; yalnız yolları saklanır. Dosyayı taşırsan açılışta uyarılır ve yeniden seçebilirsin.</p>
+    <p className="vc-trim-hint">Ayarlar <b>projeyle birlikte</b> kaydedilir (üstteki “Kaydet”). Dosyaların kendisi projeye gömülmez; yalnız yolları saklanır. Dosyayı taşırsan açılışta uyarılır ve yeniden seçebilirsin.</p>
     {issueList.length > 0 && <div role="alert" className="vc-warn">
       <strong>⚠ Eksik dosya{issueList.length > 1 ? 'lar' : ''}</strong>
       <button type="button" className="btn btn-primary" disabled={busy} onClick={relinkFromFolder}>Klasörde ara ve toplu yeniden bağla</button>
@@ -204,18 +204,18 @@ export function AudioMixPanel({ mix, onChange, loadToken }: Props) {
       {mix.videoDuration > 0 && <p className="vc-trim-hint">Video: {mix.videoDuration.toFixed(2)} sn{mix.hasOriginal ? '' : ' · Orijinal ses yok'}</p>}
       {mix.videoPath && mix.hasOriginal && !issues.video && <Waveform path={mix.videoPath} label="Orijinal ses" duration={mix.videoDuration} start={0} end={mix.videoDuration} />}
       <label className="field">Orijinal ses: {Math.round(mix.gain * 100)}%<input aria-label="Orijinal ses seviyesi" type="range" min="0" max="2" step="0.01" value={mix.gain} onChange={e => onChange(m => ({ ...m, gain: Number(e.target.value) }))}/></label>
-      <div className="property-grid"><label><input type="checkbox" checked={mix.mute} onChange={e => onChange(m => ({ ...m, mute: e.target.checked }))}/> Sustur</label><label><input type="checkbox" checked={mix.solo} onChange={e => onChange(m => ({ ...m, solo: e.target.checked }))}/> Solo</label></div>
+      <div className="property-grid"><label><input type="checkbox" checked={mix.mute} onChange={e => onChange(m => ({ ...m, mute: e.target.checked }))}/> Sesi kapat</label><label><input type="checkbox" checked={mix.solo} onChange={e => onChange(m => ({ ...m, solo: e.target.checked }))}/> Yalnız bunu dinle</label></div>
       {tracks.map((t, index) => <fieldset key={t.id} className={issues[t.id] ? 'vc-track-bad' : ''} style={{ margin: '16px 0', border: '1px solid #555', borderRadius: 8, minWidth: 0 }}>
         <legend>Kanal {index + 1} · {t.sourceDuration.toFixed(2)} sn</legend><p className="vc-trim-name" title={t.path}>{baseName(t.path)}</p>
         {!issues[t.id] && <Waveform path={t.path} label={`Kanal ${index + 1}`} duration={t.sourceDuration} start={t.sourceIn} end={t.sourceIn + t.length} />}
         <label className="field">Seviye: {Math.round(t.gain * 100)}%<input aria-label={`Kanal ${index + 1} seviye`} type="range" min="0" max="2" step="0.01" value={t.gain} onChange={e => update(t.id, { gain: Number(e.target.value) })}/></label>
         <label className="field">Pan: {t.pan === 0 ? 'Orta' : t.pan < 0 ? 'Sol' : 'Sağ'}<input aria-label={`Kanal ${index + 1} pan`} type="range" min="-1" max="1" step="0.05" value={t.pan} onChange={e => update(t.id, { pan: Number(e.target.value) })}/></label>
-        <div className="property-grid">{([['start', 'Videoda başlangıç'], ['sourceIn', 'Seste başlangıç'], ['length', 'Kullanılacak süre'], ['fadeIn', 'Fade giriş'], ['fadeOut', 'Fade çıkış']] as const).map(([key, label]) => <label className="field" key={key}>{label} (sn)<input aria-label={`Kanal ${index + 1} ${label}`} type="number" min={key === 'length' ? 0.01 : 0} step="0.1" value={t[key]} onChange={e => update(t.id, { [key]: Number(e.target.value) })}/></label>)}</div>
-        <div className="property-grid"><label><input type="checkbox" checked={t.mute} onChange={e => update(t.id, { mute: e.target.checked })}/> Sustur</label><label><input type="checkbox" checked={t.solo} onChange={e => update(t.id, { solo: e.target.checked })}/> Solo</label></div>
+        <div className="property-grid">{([['start', 'Videoda başlangıç'], ['sourceIn', 'Seste başlangıç'], ['length', 'Kullanılacak süre'], ['fadeIn', 'Yavaş açılma'], ['fadeOut', 'Yavaş kapanma']] as const).map(([key, label]) => <label className="field" key={key}>{label} (sn)<input aria-label={`Kanal ${index + 1} ${label}`} type="number" min={key === 'length' ? 0.01 : 0} step="0.1" value={t[key]} onChange={e => update(t.id, { [key]: Number(e.target.value) })}/></label>)}</div>
+        <div className="property-grid"><label><input type="checkbox" checked={t.mute} onChange={e => update(t.id, { mute: e.target.checked })}/> Sesi kapat</label><label><input type="checkbox" checked={t.solo} onChange={e => update(t.id, { solo: e.target.checked })}/> Yalnız bunu dinle</label></div>
         <button type="button" className="btn danger" onClick={() => { onChange(m => ({ ...m, tracks: m.tracks.filter(v => v.id !== t.id) })); setIssues(old => { const c = { ...old }; delete c[t.id]; return c; }); }}>Kanalı kaldır</button>
       </fieldset>)}
       <button type="button" className="btn btn-dark wide" disabled={tracks.length >= MAX_MIX_TRACKS} onClick={addTrack}>2 · Ses kanalı ekle ({tracks.length}/{MAX_MIX_TRACKS})</button>
-      <p className="vc-trim-hint">Ses veya video dosyası seçebilirsin (videonun sesi kullanılır). Video bitiminden taşan ses kesilir. Solo etkinse yalnız solo kanallar duyulur; sustur her zaman önceliklidir. Limiter taşmayı sınırlar.</p>
+      <p className="vc-trim-hint">Ses veya video dosyası seçebilirsin (videonun sesi kullanılır). Video bitiminden taşan ses kesilir. "Yalnız bunu dinle" seçiliyse yalnız o kanallar duyulur; "Sesi kapat" her zaman önceliklidir. Ses bozulması (patlama) otomatik önlenir.</p>
       <div className="property-grid">
         <label className="field">Çıktı biçimi<select aria-label="Çıktı biçimi" value={mix.format ?? 'mp4'} onChange={e => onChange(m => ({ ...m, format: e.target.value === 'mp4' ? undefined : (e.target.value as MixFormat) }))}>{MIX_FORMATS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}</select></label>
         <label className="field">Otomatik müzik kısma: {mix.ducking ? `%${Math.round(mix.ducking * 100)}` : 'kapalı'}<input aria-label="Otomatik müzik kısma gücü" type="range" min="0" max="1" step="0.05" value={mix.ducking ?? 0} onChange={e => onChange(m => ({ ...m, ducking: Number(e.target.value) > 0 ? Number(e.target.value) : undefined }))} /></label>

@@ -18,7 +18,7 @@ type Props = {
   setNotice: (text: string) => void;
 };
 
-const TITLES: Record<Workspace, string> = { video: 'Video önizlemesi', audio: 'Video ve müzik önizlemesi', subtitles: 'Altyazı önizlemesi', cover: 'Önizleme' };
+const TITLES: Record<Workspace, string> = { home: 'Önizleme', video: 'Video önizlemesi', audio: 'Video ve müzik önizlemesi', subtitles: 'Altyazı önizlemesi', cover: 'Önizleme' };
 
 function SubtitlePreview({ project, onExportSrt, onExportVtt, onClose }: Pick<Props, 'project' | 'onExportSrt' | 'onExportVtt' | 'onClose'>) {
   const valid = project.subtitles.filter(c => c.start >= 0 && c.end > c.start && c.text.trim());
@@ -48,7 +48,7 @@ export function PreviewDialog(p: Props) {
       {p.workspace === 'subtitles' && <SubtitlePreview project={p.project} onExportSrt={p.onExportSrt} onExportVtt={p.onExportVtt} onClose={p.onClose} />}
       {media && <>
         <LayeredPreview project={p.project} update={p.update} changeTimeline={p.changeTimeline} changeMix={p.changeMix} />
-        <div className="vc-modal-row"><button className="btn btn-primary" type="button" onClick={() => { p.onClose(); p.setNotice(p.workspace === 'video' ? 'Videoyu kaydetmek için sağdaki "MP4 kesme" veya "Çok klipli birleştirme" panelindeki kaydet düğmesini kullan.' : 'Sesi veya miksli videoyu kaydetmek için sağdaki Ses Miks panelinde çıktı biçimini seç ve kaydet düğmesine bas.'); }}>Kaydetmeye geç</button>
+        <div className="vc-modal-row"><button className="btn btn-primary" type="button" onClick={() => { p.onClose(); p.setNotice(p.workspace === 'video' ? 'Videoyu kaydetmek için sağdaki panelde "Videoyu kes" veya "Videoları birleştir" işinin kaydet düğmesine bas.' : 'Sesi kaydetmek için sağdaki panelde seçtiğin işin kaydet düğmesine bas.'); }}>Kaydetmeye geç</button>
           <button className="btn btn-dark" type="button" onClick={p.onClose}>Kapat</button></div></>}
       {p.workspace === 'cover' && <p className="muted-line">Kapak için soldaki 1, 2, 3 adımlarını izle.</p>}
     </div>

@@ -1,7 +1,7 @@
 {
   "name": "voxcut-studio",
   "private": true,
-  "version": "0.1.7",
+  "version": "0.1.8",
   "type": "module",
   "description": "Local-first open creative studio: design, video, audio and captions",
   "scripts": {

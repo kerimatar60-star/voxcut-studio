@@ -73,7 +73,7 @@ export function SubtitleBurnPanel({ cues }: { cues: SubtitleCue[] }) {
       <div className="vc-trim-heading"><Flame size={16} /> Altyazıyı videoya yaz</div>
       <p className="vc-trim-hint">Soldaki altyazıları seçtiğin videonun üzerine kalıcı olarak yakar ve yeni bir MP4 kaydeder. Orijinal dosya değişmez.</p>
       {!isTauri() ? (
-        <p className="vc-trim-alert">Bu işlev Chrome yerine Tauri masaüstü penceresinde çalışır.</p>
+        <p className="vc-trim-alert">Bu özellik yalnızca kurulu VoxCut Studio uygulamasında çalışır.</p>
       ) : (
         <>
           <button className="btn btn-dark wide" type="button" disabled={working} onClick={pickVideo}><FileVideo size={15} /> Video seç</button>

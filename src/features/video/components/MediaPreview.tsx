@@ -20,6 +20,6 @@ export function MediaPreview({workspace,asset,src,cues,currentTime,onTime,videoV
       : asset?.kind==='image'&&src?<img className="preview-image" alt="Seçilen proje görseli" src={src}/>
       : <div className="empty-preview"><div className="empty-preview-icon"><Clapperboard size={40}/></div><strong>{asset?'Medya dosyası yeniden bağlanmalı':'Ön izlemek için medya ekle'}</strong><span>Yerel dosyayı seçerek video veya ses ön izlemesi yapabilirsin.</span><button className="btn btn-primary" onClick={onPickFile}><Upload size={15}/> Dosya ekle</button></div>}
     </div>
-    <div className="below-preview"><span>Oynatma konumu: {seconds(currentTime)}</span><span>Birleştirme: sağdaki "Çok klipli birleştirme"</span></div>
+    <div className="below-preview"><span>Oynatma konumu: {seconds(currentTime)}</span><span>{workspace==='video'?'Birleştirmek için soldan "Videoları birleştir" kartını seç':''}</span></div>
   </>;
 }

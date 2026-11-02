@@ -105,7 +105,7 @@ export function StemPanel() {
   }
   const toggle = (id: string) => setPicked(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
 
-  if (!isTauri()) return <p className="vc-trim-alert">Ses ayrıştırma Tauri masaüstü uygulamasında çalışır.</p>;
+  if (!isTauri()) return <p className="vc-trim-alert">Şarkıyı parçalara ayırma yalnızca kurulu VoxCut Studio uygulamasında çalışır.</p>;
   return <section className="vc-trim-panel" aria-label="Yapay zekâ ile ses ayrıştırma">
     <div className="vc-trim-heading"><Music2 size={16} /> Yapay zekâ ile ayrıştırma</div>
     <p className="vc-trim-hint">Bir şarkıyı veya kaydı vokal, davul, bas ve diğer seslere ayırır. Her şey bu bilgisayarda çalışır; ses internete gönderilmez. Sonuç kusursuz değildir: sesler arasında hafif sızıntı olabilir. Kaynak dosya değişmez; çıktılar yeni dosyalardır.</p>

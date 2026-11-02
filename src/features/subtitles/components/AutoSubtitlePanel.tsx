@@ -77,7 +77,7 @@ export function AutoSubtitlePanel({ onResult }: { onResult: (srt: string) => voi
       <div className="vc-trim-heading"><Mic size={16} /> Otomatik altyazı (Whisper)</div>
       <p className="vc-trim-hint">Konuşmayı bu bilgisayarda yazıya çevirir; ses internete gönderilmez. İlk kullanımda resmî whisper.cpp motoru ve bir model <strong>sen onaylayınca</strong> indirilir (SHA-256 doğrulanır). Sonuç hatasız değildir; özel isim ve gürültülü kayıtlarda düzeltme gerekir.</p>
       {!isTauri() ? (
-        <p className="vc-trim-alert">Bu işlev Chrome yerine Tauri masaüstü penceresinde çalışır.</p>
+        <p className="vc-trim-alert">Bu özellik yalnızca kurulu VoxCut Studio uygulamasında çalışır.</p>
       ) : (
         <>
           <div className="field"><label>Whisper motoru</label>

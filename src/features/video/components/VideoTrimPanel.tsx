@@ -89,10 +89,10 @@ export function VideoTrimPanel() {
 
   return (
     <div className="vc-trim-panel">
-      <div className="vc-trim-heading"><Scissors size={16} /> Gerçek MP4 kesme</div>
-      <p className="vc-trim-hint">Windows uygulamasında yerel video seç; FFmpeg ile yalnızca seçtiğin aralığı MP4 olarak kaydet.</p>
+      <div className="vc-trim-heading"><Scissors size={16} /> Videoyu kes</div>
+      <p className="vc-trim-hint">Videoyu seç; yalnızca seçtiğin aralığı yeni bir MP4 olarak kaydeder. Orijinal videon değişmez.</p>
       {!canUseDesktop ? (
-        <p className="vc-trim-alert">Bu işlev Chrome yerine Tauri masaüstü penceresinde çalışır.</p>
+        <p className="vc-trim-alert">Bu özellik yalnızca kurulu VoxCut Studio uygulamasında çalışır.</p>
       ) : (
         <>
           <button className="btn btn-dark wide" type="button" disabled={isWorking} onClick={pickSource}>
