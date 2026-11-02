@@ -20,7 +20,7 @@ export function TopBar(p:Props){
   const [packageOpen,setPackageOpen]=useState(false);
   const pick=(fn:()=>void)=>()=>{setPackageOpen(false);fn();};
   return <header className="topbar">
-    <div className="top-title"><div className="tiny-mark"><Video size={16}/></div><b>VoxCut <span>Studio</span></b><span className="version">ALPHA 0.1</span></div>
+    <div className="top-title"><div className="tiny-mark"><Video size={16}/></div><b>VoxCut <span>Studio</span></b><span className="version">ALFA {__APP_VERSION__}</span></div>
     <div className="project-title"><input aria-label="Proje adı" value={p.name} maxLength={80} onChange={e=>p.onRename(e.target.value)}/><ChevronDown size={15}/><span className="saved-dot" style={dirty?{background:'#e9b44c',boxShadow:'0 0 0 3px #7a5a1a33'}:undefined} title={dirty?(projectPath?'Değişiklikler birazdan otomatik kaydedilecek':'Kaydedilmemiş değişiklikler'):(projectPath?`Kaydedildi: ${projectPath}`:'Yerel oturum')}/></div>
     <div className="actions">
       <button className="btn btn-dark" onClick={p.undo} disabled={!histInfo.undo} title="Geri al (Ctrl+Z)" aria-label="Geri al"><Undo2 size={16}/></button>

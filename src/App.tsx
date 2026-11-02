@@ -1,6 +1,6 @@
 import {useCallback,useEffect,useState} from 'react';
 import {invoke,isTauri} from '@tauri-apps/api/core';
-import {BookOpen,Check,Mic2,Scissors,Settings2,ShieldCheck,Video,WandSparkles} from 'lucide-react';
+import {Check,Mic2,Scissors,Settings2,ShieldCheck,Video} from 'lucide-react';
 import {exampleProject} from './core/project';
 import {exportDesign} from './core/designExport';
 import type {ExportFormat} from './core/designExport';
@@ -15,7 +15,7 @@ import {tabs} from './shared/workspaces';
 import {useTheme} from './shared/useTheme';
 import {AudioMixPanel} from './features/audio/components/AudioMixPanel';
 import {DesignStage} from './features/design/components/DesignStage';
-import {DesignComingSoon} from './features/design/components/DesignComingSoon';
+import {AiDesignPanel} from './features/design/components/AiDesignPanel';
 import {CoverScreen} from './features/cover/components/CoverScreen';
 import {MediaLibrary} from './features/library/components/MediaLibrary';
 import {useMediaLibrary} from './features/library/useMediaLibrary';
@@ -65,7 +65,7 @@ export default function App(){
   const asset=project.assets.find(a=>a.id===media.selectedAsset);
   const src=media.selectedAsset?media.urls[media.selectedAsset]:undefined;
   const exportImage=(format:ExportFormat,scale:number)=>{exportDesign(project,{format,scale,imageSources:media.imageSources}).then(info=>{if(info)setNotice(`Kaydedildi: ${info}`);}).catch(err=>setNotice(err instanceof Error?err.message:String(err)));};
-  const exportCurrent=()=>workspace==='design'?exportImage('png',1):workspace==='subtitles'?subs.exportSrt():workspace==='cover'?setNotice('Kapak için soldaki 1, 2, 3 adımlarını izle.'):setNotice(workspace==='video'?'MP4 kesmek için sağdaki Gerçek MP4 kesme panelini kullan.':'Ses miksli MP4 için sağdaki A26 ses panelini kullan. MP3 çıktısı henüz yok.');
+  const exportCurrent=()=>workspace==='design'?exportImage('png',1):workspace==='subtitles'?subs.exportSrt():workspace==='cover'?setNotice('Kapak için soldaki 1, 2, 3 adımlarını izle.'):setNotice(workspace==='video'?'Videoyu kaydetmek için sağdaki "MP4 kesme" veya "Çok klipli birleştirme" panelindeki kaydet düğmesini kullan.':'Sesi veya miksli videoyu kaydetmek için sağdaki Ses Miks panelinde çıktı biçimini seç ve kaydet düğmesine bas.');
   const pickMedia=()=>isTauri()?void media.addFromDialog():media.mediaInputRef.current?.click();
 
   return <div className="app">
@@ -91,7 +91,7 @@ export default function App(){
         {workspace==='cover'?<CoverScreen setNotice={setNotice}/>:<>
         <section className="panel left-panel">
           <div className="panel-heading"><div><span className="eyebrow">ÇALIŞMA ALANI</span><h2>{tabs.find(t=>t.id===workspace)?.label} Stüdyosu</h2></div><Settings2 size={18} className="muted-icon"/></div>
-          {workspace==='design'&&<DesignComingSoon/>}
+          {workspace==='design'&&<AiDesignPanel project={project} onApply={design=>update(p=>({...p,design}))} setNotice={setNotice}/>}
           {(workspace==='video'||workspace==='audio')&&<MediaLibrary library={media.library} filter={media.filter} setFilter={media.setFilter} selectedAsset={media.selectedAsset} setSelectedAsset={media.setSelectedAsset} urls={media.urls} problems={media.problems} busy={media.busy} onPickFile={pickMedia} removeAsset={media.removeAsset} onRelink={id=>void media.relinkAsset(id)} onRelinkFolder={()=>void media.relinkFromFolder()}/>}
           {workspace==='subtitles'&&<SubtitleTools cues={project.subtitles} onAdd={subs.addCue} onExportSrt={subs.exportSrt} onExportVtt={subs.exportVtt} onImportClick={()=>subs.subtitleInputRef.current?.click()} onAutoResult={subs.importSrtText}/>}
           <div className="panel-bottom"><ShieldCheck size={16}/><div><strong>Önce yerel, sonra bulut</strong><span>Dosyalar izinsiz yüklenmez.</span></div></div>
@@ -104,7 +104,7 @@ export default function App(){
               ?<DesignStage design={project.design} imageSources={media.imageSources}/>
               :<MediaPreview workspace={workspace} asset={asset} src={src} cues={project.subtitles} currentTime={currentTime} onTime={setCurrentTime} videoVolume={videoVolume} audioVolume={audioVolume} onPickFile={pickMedia}/>}
           </div>
-          <Timeline project={project} onSelectAsset={media.setSelectedAsset} onOpenSubtitles={()=>setWorkspace('subtitles')}/>
+          {workspace!=='design'&&<Timeline project={project} onSelectAsset={media.setSelectedAsset} onOpenSubtitles={()=>setWorkspace('subtitles')}/>}
         </section>
 
         <aside className={`panel properties ${workspace === 'audio' || workspace === 'video' ? 'vc-audio-properties' : ''}`}>
@@ -116,12 +116,11 @@ export default function App(){
               ?<CueList cues={project.subtitles} onUpdate={subs.updateCue} onRemove={subs.removeCue} onAdd={subs.addCue} onExportSrt={subs.exportSrt}/>
               :<MediaProperties workspace={workspace} asset={asset} videoVolume={videoVolume} audioVolume={audioVolume} setVideoVolume={setVideoVolume} setAudioVolume={setAudioVolume} timeline={project.timeline??emptyTimeline()} onTimelineChange={changeTimeline} timelineLoadToken={timelineLoadToken} cues={project.subtitles} mix={project.audioMix??emptyAudioMix()}/>}
           <CommandPanel project={project} update={update} onApplied={setNotice} onUndo={history.undo}/>
-          <div className="properties-footer"><WandSparkles size={15}/> AI modelleri isteğe bağlı kurulacak.</div>
         </aside>
       
         </>}
       </div>
-      <footer className="statusbar"><span><span className="status-online"/> Yerel oturum</span><span><BookOpen size={13}/> Kılavuz: README.md</span><span className="footer-right"><Mic2 size={13}/> Yapay zekâ ayrıştırma planlandı <span className="sep">•</span> <Scissors size={13}/> Birleştirme ve kesme hazır</span></footer>
+      <footer className="statusbar"><span><span className="status-online"/> Yerel oturum</span><span className="footer-right"><Mic2 size={13}/> Yapay zekâ araçları hazır <span className="sep">•</span> <Scissors size={13}/> Birleştirme ve kesme hazır</span></footer>
     </main>
     <input ref={media.mediaInputRef} type="file" accept="video/*,audio/*,image/*" multiple hidden onChange={e=>media.addMedia(e.target.files)}/>
     <input ref={subs.subtitleInputRef} type="file" accept=".srt,.vtt,text/vtt,application/x-subrip" hidden onChange={e=>void subs.importSubtitles(e.target.files)}/>
