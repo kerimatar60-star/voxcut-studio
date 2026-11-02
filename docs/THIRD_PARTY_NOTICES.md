@@ -40,3 +40,5 @@ Uygulama hiçbir yazı tipi dosyası **dağıtmaz**; yalnız Windows'ta hazır g
 - Rust ve npm bağımlılıklarının otomatik lisans taraması ve imza/bildirim dosyası üretimi.
 - Kurulum paketi içine lisans metinlerinin (MIT/Apache tam metinleri) eklenmesi.
 - GPU (CUDA) için Whisper veya ayrıştırma modelleri: eklenirse bu belge güncellenmelidir.
+
+**OpenAI API (hizmet, pakete gömülü değil):** "Yazıyla tasarla" kullanıcının kendi anahtarı ve onayıyla `api.openai.com` adresine bağlanır. Hizmet koşulları, fiyatlandırma ve veri işleme OpenAI'ye aittir; bu belge hukuki inceleme gerektiren bir taslaktır.

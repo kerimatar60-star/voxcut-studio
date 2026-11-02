@@ -1,6 +1,6 @@
 [package]
 name = "voxcut-studio"
-version = "0.1.5"
+version = "0.1.6"
 description = "VoxCut Studio Desktop"
 authors = ["VoxCut Studio Contributors"]
 edition = "2021"

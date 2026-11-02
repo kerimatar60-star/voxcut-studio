@@ -9,11 +9,11 @@ Hesap yok, abonelik yok, bulut yok: dosyalarınız bilgisayarınızda kalır.
 
 ## Ekran görüntüleri
 
-| Açık tema | Koyu tema |
+| Yazıyla tasarla | Önizleme (video + müzik katmanları) |
 |---|---|
-| ![Tasarım sekmesi, açık tema](docs/screenshots/tasarim.png) | ![Tasarım sekmesi, koyu tema](docs/screenshots/tasarim-koyu.png) |
+| ![Yazıyla tasarla, örnek cevapla](docs/screenshots/yaziyla-tasarla.png) | ![Katmanlı önizleme](docs/screenshots/onizleme.png) |
 
-*Tasarım sekmesi, hazır şablon uygulanmış. Görüntüler tarayıcı önizlemesinden alındı; video, ses ve altyazı işlemleri (FFmpeg, Whisper) masaüstü uygulamasında çalışır.*
+*Görüntüler tarayıcı önizlemesinden alındı; yazıyla tasarla örnek bir cevapla gösteriliyor (gerçek kullanımda kendi OpenAI anahtarın gerekir). Video, ses ve altyazı işlemleri (FFmpeg, Whisper) masaüstü uygulamasında çalışır.*
 
 ## İndirme ve kurulum
 
@@ -28,7 +28,9 @@ Yalnız otomatik altyazı (Whisper) isteğe bağlıdır ve pakette **yoktur**: A
 
 | Alan | Durum |
 |---|---|
-| **Tasarım** | Metin / şekil / görsel katmanları, sürükle-boyutlandır-döndür, 13 özgün şablon, hazır tuval boyutları, PNG / JPEG / WebP çıktı |
+| **Tasarım** | Yazıyla tasarla (ChatGPT; kendi API anahtarın ve açık onayınla), 3 öneri, yazıyla düzeltme, PNG / JPEG / WebP çıktı |
+| **Kapak** | Videoya kapak fotoğrafı ekle (yeniden kodlama yok) |
+| **Önizleme** | Dışa aktarmadan önce sonucu gör; video + müzik + altyazı katmanlarını oynat, istediğin saniyede böl / müziği başlat / altyazı ekle |
 | **Video** | Çok klipli birleştirme (≤ 50 klip), 12 geçiş türü, klip başına renk ayarı, ilerleme + iptal, MP4 (H.264 + AAC) |
 | **Ses** | 8 ek kanal, seviye / pan / fade / sustur / solo, konuşurken müzik kısma (ducking), dalga formu, MP4 / WAV / MP3 / FLAC, gürültü temizleme (klasik veya **yapay zekâ / RNNoise**, A/B dinleme), klasik vokal azaltma, **yapay zekâ ile ayrıştırma** (vokal / eşlik / davul / bas / diğer; Demucs, tek tıkla kurulum) |
 | **Altyazı** | Elle düzenleme, SRT / VTT içe-dışa aktarma, videoya yakma (yazı tipi, renk, kontur, kutu), **Whisper ile yerel otomatik altyazı** |

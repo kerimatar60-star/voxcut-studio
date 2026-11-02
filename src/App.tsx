@@ -2,8 +2,6 @@ import {useCallback,useEffect,useState} from 'react';
 import {invoke,isTauri} from '@tauri-apps/api/core';
 import {Check,Mic2,Scissors,Settings2,ShieldCheck,Video} from 'lucide-react';
 import {exampleProject} from './core/project';
-import {exportDesign} from './core/designExport';
-import type {ExportFormat} from './core/designExport';
 import {emptyAudioMix} from './core/audioMixModel';
 import {emptyTimeline} from './core/timelineModel';
 import type {TimelineState} from './core/timelineModel';
@@ -15,6 +13,7 @@ import {tabs} from './shared/workspaces';
 import {useTheme} from './shared/useTheme';
 import {AudioMixPanel} from './features/audio/components/AudioMixPanel';
 import {DesignStage} from './features/design/components/DesignStage';
+import {PreviewDialog} from './features/preview/components/PreviewDialog';
 import {AiDesignPanel} from './features/design/components/AiDesignPanel';
 import {CoverScreen} from './features/cover/components/CoverScreen';
 import {MediaLibrary} from './features/library/components/MediaLibrary';
@@ -35,6 +34,7 @@ export default function App(){
   const [project,setProject]=useState<ProjectDocument>(()=>exampleProject());
   const [workspace,setWorkspace]=useState<Workspace>('design');
   const [notice,setNotice]=useState('');
+  const [previewOpen,setPreviewOpen]=useState(false);
   const [videoVolume,setVideoVolume]=useState(0.85);
   const [audioVolume,setAudioVolume]=useState(0.8);
   const [currentTime,setCurrentTime]=useState(0);
@@ -64,8 +64,7 @@ export default function App(){
 
   const asset=project.assets.find(a=>a.id===media.selectedAsset);
   const src=media.selectedAsset?media.urls[media.selectedAsset]:undefined;
-  const exportImage=(format:ExportFormat,scale:number)=>{exportDesign(project,{format,scale,imageSources:media.imageSources}).then(info=>{if(info)setNotice(`Kaydedildi: ${info}`);}).catch(err=>setNotice(err instanceof Error?err.message:String(err)));};
-  const exportCurrent=()=>workspace==='design'?exportImage('png',1):workspace==='subtitles'?subs.exportSrt():workspace==='cover'?setNotice('Kapak için soldaki 1, 2, 3 adımlarını izle.'):setNotice(workspace==='video'?'Videoyu kaydetmek için sağdaki "MP4 kesme" veya "Çok klipli birleştirme" panelindeki kaydet düğmesini kullan.':'Sesi veya miksli videoyu kaydetmek için sağdaki Ses Miks panelinde çıktı biçimini seç ve kaydet düğmesine bas.');
+  const exportCurrent=()=>setPreviewOpen(true);
   const pickMedia=()=>isTauri()?void media.addFromDialog():media.mediaInputRef.current?.click();
 
   return <div className="app">
@@ -125,5 +124,6 @@ export default function App(){
     <input ref={media.mediaInputRef} type="file" accept="video/*,audio/*,image/*" multiple hidden onChange={e=>media.addMedia(e.target.files)}/>
     <input ref={subs.subtitleInputRef} type="file" accept=".srt,.vtt,text/vtt,application/x-subrip" hidden onChange={e=>void subs.importSubtitles(e.target.files)}/>
     <input ref={files.projectInputRef} type="file" accept=".json,.voxcut.json,application/json" hidden onChange={files.importProject}/>
+    {previewOpen&&<PreviewDialog workspace={workspace} project={project} imageSources={media.imageSources} update={update} changeTimeline={changeTimeline} changeMix={changeMix} onExportSrt={subs.exportSrt} onExportVtt={subs.exportVtt} onClose={()=>setPreviewOpen(false)} setNotice={setNotice}/>}
   </div>;
 }
