@@ -1,6 +1,6 @@
 # VoxCut Studio
 
-**Windows için ücretsiz, yerel çalışan tasarım + video + ses + altyazı stüdyosu.**
+**Windows için ücretsiz, yerel çalışan video + ses + altyazı stüdyosu.**
 Hesap yok, abonelik yok, bulut yok: dosyalarınız bilgisayarınızda kalır.
 
 *English: a free, local-first Windows creative studio (design canvas, multi-clip video merge with transitions, audio mixing/ducking, subtitles with offline Whisper). Alpha. Download the installer from [Releases](../../releases).*
@@ -9,11 +9,11 @@ Hesap yok, abonelik yok, bulut yok: dosyalarınız bilgisayarınızda kalır.
 
 ## Ekran görüntüleri
 
-| Yazıyla tasarla | Önizleme (video + müzik katmanları) |
-|---|---|
-| ![Yazıyla tasarla, örnek cevapla](docs/screenshots/yaziyla-tasarla.png) | ![Katmanlı önizleme](docs/screenshots/onizleme.png) |
+| Katmanlı önizleme (video + müzik + altyazı) |
+|---|
+| ![Katmanlı önizleme](docs/screenshots/onizleme.png) |
 
-*Görüntüler tarayıcı önizlemesinden alındı; yazıyla tasarla örnek bir cevapla gösteriliyor (gerçek kullanımda kendi OpenAI anahtarın gerekir). Video, ses ve altyazı işlemleri (FFmpeg, Whisper) masaüstü uygulamasında çalışır.*
+*Görüntü tarayıcı önizlemesinden alındı; video, ses ve altyazı işlemleri (FFmpeg, Whisper) masaüstü uygulamasında çalışır.*
 
 ## İndirme ve kurulum
 
@@ -28,7 +28,6 @@ Yalnız otomatik altyazı (Whisper) isteğe bağlıdır ve pakette **yoktur**: A
 
 | Alan | Durum |
 |---|---|
-| **Tasarım** | Yazıyla tasarla (ChatGPT; kendi API anahtarın ve açık onayınla), 3 öneri, yazıyla düzeltme, PNG / JPEG / WebP çıktı |
 | **Kapak** | Videoya kapak fotoğrafı ekle (yeniden kodlama yok) |
 | **Önizleme** | Dışa aktarmadan önce sonucu gör; video + müzik + altyazı katmanlarını oynat, istediğin saniyede böl / müziği başlat / altyazı ekle |
 | **Video** | Çok klipli birleştirme (≤ 50 klip), 12 geçiş türü, klip başına renk ayarı, ilerleme + iptal, MP4 (H.264 + AAC) |

@@ -8,13 +8,11 @@ VoxCut Studio dosyalarınızı **bu bilgisayarda** işler. Hesap, giriş, abonel
 
 ## Ağ erişimi — yalnız sizin tıklamanızla
 
-Uygulama yalnızca aşağıdaki durumlarda internete çıkar. Birincisi: **Altyazı sekmesinde "Motoru indir" / "Modeli indir"** düğmelerine bastığınızda:
+Uygulama yalnızca **Altyazı sekmesinde "Motoru indir" / "Modeli indir"** düğmelerine bastığınızda internete çıkar:
 
 - `github.com/ggml-org/whisper.cpp` (konuşma tanıma motoru) ve `huggingface.co/ggerganov/whisper.cpp` (model dosyası) adreslerinden **dosya indirir**.
 - Bu isteklere **sizin ses, video veya proje verileriniz eklenmez**; yalnız sabit dosya adresleri istenir. GitHub ve Hugging Face, her web isteğinde olduğu gibi IP adresinizi görebilir.
 - İndirilen dosya doğrulanamazsa (boyut/SHA-256) silinir.
-
-**Yazıyla tasarla (isteğe bağlı):** Tasarım sekmesinde kendi OpenAI API anahtarınızı kaydeder ve açık onay kutusunu işaretlerseniz, **"Tasarla" veya "Değişikliği uygula" düğmesine bastığınızda** `api.openai.com` adresine tasarım isteğiniz (yazdığınız metin; düzeltmede mevcut tasarımın metin ve renk bilgisi) gönderilir. Dosyalarınız, videolarınız ve sesleriniz gönderilmez. İstekler OpenAI hesabınızdan ücret kesebilir. Anahtar yalnızca bu Windows kullanıcısının çözebileceği şifreli biçimde uygulama veri klasöründe durur; "Anahtarı sil" ile kaldırılır. OpenAI'nin gizlilik koşulları geçerlidir.
 
 Başka hiçbir özellik ağ kullanmaz. Vite geliştirme sunucusu yalnızca `127.0.0.1` dinler.
 

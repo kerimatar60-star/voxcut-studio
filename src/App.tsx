@@ -12,9 +12,7 @@ import type {ToolCheck} from './core/toolCheck';
 import {tabs} from './shared/workspaces';
 import {useTheme} from './shared/useTheme';
 import {AudioMixPanel} from './features/audio/components/AudioMixPanel';
-import {DesignStage} from './features/design/components/DesignStage';
 import {PreviewDialog} from './features/preview/components/PreviewDialog';
-import {DesignNotice} from './features/design/components/DesignNotice';
 import {CoverScreen} from './features/cover/components/CoverScreen';
 import {MediaLibrary} from './features/library/components/MediaLibrary';
 import {useMediaLibrary} from './features/library/useMediaLibrary';
@@ -32,7 +30,7 @@ import {Timeline} from './features/video/components/Timeline';
 export default function App(){
   const {theme,toggle:toggleTheme}=useTheme();
   const [project,setProject]=useState<ProjectDocument>(()=>exampleProject());
-  const [workspace,setWorkspace]=useState<Workspace>('design');
+  const [workspace,setWorkspace]=useState<Workspace>('video');
   const [notice,setNotice]=useState('');
   const [previewOpen,setPreviewOpen]=useState(false);
   const [videoVolume,setVideoVolume]=useState(0.85);
@@ -90,28 +88,23 @@ export default function App(){
         {workspace==='cover'?<CoverScreen setNotice={setNotice}/>:<>
         <section className="panel left-panel">
           <div className="panel-heading"><div><span className="eyebrow">ÇALIŞMA ALANI</span><h2>{tabs.find(t=>t.id===workspace)?.label} Stüdyosu</h2></div><Settings2 size={18} className="muted-icon"/></div>
-          {workspace==='design'&&<DesignNotice/>}
           {(workspace==='video'||workspace==='audio')&&<MediaLibrary library={media.library} filter={media.filter} setFilter={media.setFilter} selectedAsset={media.selectedAsset} setSelectedAsset={media.setSelectedAsset} urls={media.urls} problems={media.problems} busy={media.busy} onPickFile={pickMedia} removeAsset={media.removeAsset} onRelink={id=>void media.relinkAsset(id)} onRelinkFolder={()=>void media.relinkFromFolder()}/>}
           {workspace==='subtitles'&&<SubtitleTools cues={project.subtitles} onAdd={subs.addCue} onExportSrt={subs.exportSrt} onExportVtt={subs.exportVtt} onImportClick={()=>subs.subtitleInputRef.current?.click()} onAutoResult={subs.importSrtText}/>}
           <div className="panel-bottom"><ShieldCheck size={16}/><div><strong>Önce yerel, sonra bulut</strong><span>Dosyalar izinsiz yüklenmez.</span></div></div>
         </section>
 
         <section className="editor">
-          <div className="editor-header"><div className="breadcrumb">PROJE / <span>{tabs.find(t=>t.id===workspace)?.label.toUpperCase()}</span></div><div className="editor-header-right"><span className="status-online"/> Çalışma alanı hazır <span className="sep">•</span> <span className="resolution">{workspace==='design'?`${project.design.width} × ${project.design.height}`:'Yerel ön izleme'}</span></div></div>
+          <div className="editor-header"><div className="breadcrumb">PROJE / <span>{tabs.find(t=>t.id===workspace)?.label.toUpperCase()}</span></div><div className="editor-header-right"><span className="status-online"/> Çalışma alanı hazır <span className="sep">•</span> <span className="resolution">Yerel ön izleme</span></div></div>
           <div className="preview-area">
-            {workspace==='design'
-              ?<DesignStage design={project.design} imageSources={media.imageSources}/>
-              :<MediaPreview workspace={workspace} asset={asset} src={src} cues={project.subtitles} currentTime={currentTime} onTime={setCurrentTime} videoVolume={videoVolume} audioVolume={audioVolume} onPickFile={pickMedia}/>}
+            <MediaPreview workspace={workspace} asset={asset} src={src} cues={project.subtitles} currentTime={currentTime} onTime={setCurrentTime} videoVolume={videoVolume} audioVolume={audioVolume} onPickFile={pickMedia}/>
           </div>
-          {workspace!=='design'&&<Timeline project={project} onSelectAsset={media.setSelectedAsset} onOpenSubtitles={()=>setWorkspace('subtitles')}/>}
+          <Timeline project={project} onSelectAsset={media.setSelectedAsset} onOpenSubtitles={()=>setWorkspace('subtitles')}/>
         </section>
 
         <aside className={`panel properties ${workspace === 'audio' || workspace === 'video' ? 'vc-audio-properties' : ''}`}>
           <div className="panel-heading"><div><span className="eyebrow">DÜZENLE</span><h2>Özellikler</h2></div><Settings2 size={18} className="muted-icon"/></div>
           <div className="vc-mix-container" hidden={workspace!=='audio'}><AudioMixPanel mix={project.audioMix??emptyAudioMix()} onChange={changeMix} loadToken={mixLoadToken}/></div>
-          {workspace==='design'
-            ?null
-            :workspace==='subtitles'
+          {workspace==='subtitles'
               ?<CueList cues={project.subtitles} onUpdate={subs.updateCue} onRemove={subs.removeCue} onAdd={subs.addCue} onExportSrt={subs.exportSrt}/>
               :<MediaProperties workspace={workspace} asset={asset} videoVolume={videoVolume} audioVolume={audioVolume} setVideoVolume={setVideoVolume} setAudioVolume={setAudioVolume} timeline={project.timeline??emptyTimeline()} onTimelineChange={changeTimeline} timelineLoadToken={timelineLoadToken} cues={project.subtitles} mix={project.audioMix??emptyAudioMix()}/>}
           <CommandPanel project={project} update={update} onApplied={setNotice} onUndo={history.undo}/>
@@ -124,6 +117,6 @@ export default function App(){
     <input ref={media.mediaInputRef} type="file" accept="video/*,audio/*,image/*" multiple hidden onChange={e=>media.addMedia(e.target.files)}/>
     <input ref={subs.subtitleInputRef} type="file" accept=".srt,.vtt,text/vtt,application/x-subrip" hidden onChange={e=>void subs.importSubtitles(e.target.files)}/>
     <input ref={files.projectInputRef} type="file" accept=".json,.voxcut.json,application/json" hidden onChange={files.importProject}/>
-    {previewOpen&&<PreviewDialog workspace={workspace} project={project} imageSources={media.imageSources} update={update} changeTimeline={changeTimeline} changeMix={changeMix} onExportSrt={subs.exportSrt} onExportVtt={subs.exportVtt} onClose={()=>setPreviewOpen(false)} setNotice={setNotice}/>}
+    {previewOpen&&<PreviewDialog workspace={workspace} project={project} update={update} changeTimeline={changeTimeline} changeMix={changeMix} onExportSrt={subs.exportSrt} onExportVtt={subs.exportVtt} onClose={()=>setPreviewOpen(false)} setNotice={setNotice}/>}
   </div>;
 }

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VoxCut Studio — Yeni arayüz önerisi</title>
+<style>
+:root{--bg:#0a0b10;--s1:#12141b;--s2:#181b24;--s3:#20242f;--s4:#2a2f3d;--line:rgba(255,255,255,.09);--tx:#f3f4f9;--tx2:#b4b9cb;--tx3:#8e94aa;--ac:#8b6cff;--ac2:#b78bff;--acs:rgba(139,108,255,.16);--ok:#3ddc97;--warn:#f3b955;--bad:#ff7a90;--v:#4a63d9;--a:#1f9d8b;--sub:#c58a3e}
+:root[data-t=light]{--bg:#e9ecf4;--s1:#fff;--s2:#f4f6fb;--s3:#e8ebf4;--s4:#d9deec;--line:rgba(20,24,44,.1);--tx:#171a2b;--tx2:#4a5069;--tx3:#5f6682;--acs:rgba(139,108,255,.14)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 "Segoe UI",Inter,system-ui,sans-serif}
+button{font:inherit;color:inherit;cursor:pointer}
+.app{display:grid;grid-template-columns:96px 1fr;grid-template-rows:56px 1fr 34px;height:100vh;gap:0}
+.top{grid-column:1/3;display:flex;align-items:center;gap:10px;padding:0 16px;background:var(--s1);border-bottom:1px solid var(--line)}
+.logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#8b6cff,#6a4df0);display:grid;place-items:center;font-weight:800}
+.top b{font-size:16px}.sp{flex:1}
+.btn{background:var(--s3);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:14px}
+.btn:hover{background:var(--s4)}
+.pri{background:linear-gradient(135deg,#8b6cff,#6a4df0);border-color:transparent;color:#fff;font-weight:600}
+.rail{background:var(--s1);border-right:1px solid var(--line);padding:12px 8px;display:flex;flex-direction:column;gap:6px}
+.rail button{background:none;border:0;border-radius:12px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:13px;color:var(--tx2)}
+.rail button .i{font-size:22px}
+.rail button.on{background:var(--acs);color:var(--tx);font-weight:600;box-shadow:inset 3px 0 0 var(--ac)}
+.rail button:hover{background:var(--s3)}
+main{overflow:auto;padding:28px 32px}
+.screen{display:none;max-width:1100px;margin:0 auto}.screen.on{display:block}
+h1{font-size:28px;margin:0 0 6px;letter-spacing:-.3px}
+.lead{color:var(--tx2);margin:0 0 22px;font-size:16px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.card{background:var(--s2);border:1px solid var(--line);border-radius:16px;padding:18px;text-align:left;transition:.15s}
+.card:hover{border-color:var(--ac);transform:translateY(-2px)}
+.card.sel{border:2px solid var(--ac);background:var(--acs)}
+.card .big{font-size:30px;line-height:1.1}
+.card h3{margin:8px 0 3px;font-size:17px}.card p{margin:0;color:var(--tx2);font-size:14px}
+.row{display:grid;grid-template-columns:260px 1fr 250px;gap:16px;align-items:start}
+.side{display:flex;flex-direction:column;gap:10px}
+.panel{background:var(--s2);border:1px solid var(--line);border-radius:16px;padding:18px}
+.steps{display:flex;gap:8px;margin-bottom:16px}
+.steps span{flex:1;text-align:center;padding:8px;border-radius:10px;background:var(--s3);font-size:14px;color:var(--tx2)}
+.steps span.on{background:var(--ac);color:#fff;font-weight:600}.steps span.done{background:rgba(61,220,151,.16);color:var(--ok)}
+.drop{border:2px dashed var(--ac);border-radius:16px;padding:34px 20px;text-align:center;background:var(--acs)}
+.drop .big{font-size:36px}
+.tip{background:#2b2350;border:1px solid var(--ac);border-radius:14px;padding:12px 14px;font-size:14px}
+:root[data-t=light] .tip{background:#efeaff}
+.tip b{display:block;margin-bottom:3px}
+.muted{color:var(--tx3);font-size:13px}
+.bar{height:10px;border-radius:10px;background:var(--s4);overflow:hidden;margin:10px 0}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8b6cff,#b78bff);transition:width .2s}
+.stem{display:flex;align-items:center;gap:10px;background:var(--s3);border-radius:12px;padding:8px 12px;margin:6px 0}
+.play{width:28px;height:28px;border-radius:50%;background:var(--ac);display:grid;place-items:center;font-size:12px;color:#fff}
+.tl{background:var(--s2);border-radius:14px;padding:10px;margin-top:12px}
+.lane{display:flex;align-items:center;height:30px;margin-bottom:4px}.lane span{width:64px;font-size:12px;color:var(--tx2)}
+.lane div{flex:1;position:relative;height:100%;background:var(--s3);border-radius:6px}
+.blk{position:absolute;top:3px;bottom:3px;border-radius:5px;font-size:12px;padding:0 8px;line-height:24px;color:#fff;overflow:hidden;white-space:nowrap}
+.status{grid-column:1/3;display:flex;gap:18px;align-items:center;padding:0 16px;background:var(--s1);border-top:1px solid var(--line);font-size:13px;color:var(--tx3)}
+.ov{position:fixed;inset:0;background:rgba(5,6,12,.65);display:none;align-items:center;justify-content:center;z-index:9}.ov.on{display:flex}
+.modal{background:var(--s2);border:1px solid var(--line);border-radius:18px;padding:24px;width:min(460px,92vw)}
+.dots{display:flex;gap:6px;margin:12px 0}.dots i{width:8px;height:8px;border-radius:50%;background:var(--s4)}.dots i.on{background:var(--ac)}
+.badge{display:inline-block;background:var(--acs);color:var(--ac2);border-radius:99px;padding:2px 10px;font-size:12px;font-weight:600}
+.note{border-left:4px solid var(--warn);background:rgba(243,185,85,.12);padding:10px 14px;border-radius:8px;font-size:14px;margin:16px 0}
+@media(max-width:900px){.row{grid-template-columns:1fr}.app{grid-template-columns:72px 1fr}}
+</style></head><body>
+<div class="app">
+ <header class="top"><div class="logo">▶</div><b>VoxCut Studio</b><span class="badge">Yeni arayüz önerisi</span><span class="sp"></span>
+  <button class="btn" id="help">❓ Yardım turu</button><button class="btn" id="theme">☾ / ☀</button></header>
+ <nav class="rail" aria-label="Bölümler">
+  <button data-go="home" class="on"><span class="i">🏠</span>Ana sayfa</button>
+  <button data-go="video"><span class="i">🎬</span>Video</button>
+  <button data-go="audio"><span class="i">🎧</span>Ses</button>
+  <button data-go="subs"><span class="i">💬</span>Altyazı</button>
+  <button data-go="cover"><span class="i">🖼</span>Kapak</button>
+ </nav>
+ <main>
+  <section class="screen on" id="home">
+   <h1>Merhaba! Ne yapmak istiyorsun?</h1>
+   <p class="lead">Bir kart seç, gerisini biz yönlendirelim. Her şey bu bilgisayarda çalışır, internete bir şey gönderilmez.</p>
+   <div class="cards">
+    <button class="card" data-go="video"><div class="big">🎬</div><h3>Video kes veya birleştir</h3><p>Parçaları seç, sırala, geçiş ekle, MP4 kaydet.</p></button>
+    <button class="card" data-go="audio"><div class="big">🎧</div><h3>Sesi düzenle</h3><p>Gürültüyü azalt, şarkıyı vokal ve müziğe ayır.</p></button>
+    <button class="card" data-go="subs"><div class="big">💬</div><h3>Altyazı ekle</h3><p>Konuşmayı yazıya çevir veya elle yaz, videoya yaz.</p></button>
+    <button class="card" data-go="cover"><div class="big">🖼</div><h3>Videoya kapak ekle</h3><p>Bir fotoğrafı videonun kapağı yap.</p></button>
+   </div>
+   <h3 style="margin:28px 0 8px">Son projeler</h3>
+   <div class="panel" style="display:flex;gap:14px;align-items:center"><span style="font-size:22px">📁</span><b>Tatil videosu</b><span class="muted">dün 21:40</span><span class="sp" style="flex:1"></span><button class="btn">Aç</button></div>
+   <div class="note"><b>Tasarım sekmesi hakkında:</b> bu öneride yok. Eski basit düzenleyici zaten kaldırıldı, yapay zekâ bağlantısı da istenmedi. Aşağıdaki "Tasarım için seçenekler" bölümünde iki yol gösteriyorum, sen seçersin.</div>
+  </section>
+
+  <section class="screen" id="video">
+   <h1>Video</h1><p class="lead">Önce ne yapacağını seç, sonra 3 adımda bitir.</p>
+   <div class="row">
+    <div class="side" id="vtasks">
+     <button class="card sel" data-task="Videoyu kes"><div class="big">✂️</div><h3>Videoyu kes</h3><p>Baştan ve sondan fazlalığı at.</p></button>
+     <button class="card" data-task="Videoları birleştir"><div class="big">🔗</div><h3>Videoları birleştir</h3><p>Birden çok klibi art arda diz.</p></button>
+    </div>
+    <div class="panel">
+     <div class="steps"><span class="on">1 Dosya seç</span><span>2 Ayarla</span><span>3 Kaydet</span></div>
+     <div class="drop"><div class="big">⬆️</div><h3 style="margin:6px 0">Videoyu buraya bırak</h3><div class="muted">ya da bilgisayardan seç</div><p><button class="btn pri">Video seç</button></p></div>
+     <p class="muted">Orijinal dosyan hiçbir zaman değişmez; sonuç yeni bir dosya olarak kaydedilir.</p>
+    </div>
+    <div class="side"><div class="tip"><b>💡 İpucu</b>Birleştirirken klipler arasına yumuşak geçiş ekleyebilirsin.</div></div>
+   </div>
+   <div class="tl"><div class="muted" style="margin-bottom:6px">Zaman çizelgesi (video seçilince dolar)</div>
+    <div class="lane"><span>Video</span><div><b class="blk" style="left:0;width:34%;background:var(--v)">Klip 1</b><b class="blk" style="left:34%;width:40%;background:var(--v);opacity:.8">Klip 2</b></div></div>
+    <div class="lane"><span>Müzik</span><div><b class="blk" style="left:10%;width:70%;background:var(--a)">Şarkı.mp3</b></div></div>
+    <div class="lane"><span>Altyazı</span><div><b class="blk" style="left:36%;width:18%;background:var(--sub)">Merhaba…</b></div></div></div>
+  </section>
+
+  <section class="screen" id="audio">
+   <h1>Ses</h1><p class="lead">Ne yapmak istiyorsun? Aynı anda tek iş gösterilir.</p>
+   <div class="row">
+    <div class="side" id="atasks">
+     <button class="card sel" data-task="Gürültüyü azalt"><div class="big">🧹</div><h3>Gürültüyü azalt</h3><p>Fan, uğultu, oda sesi.</p></button>
+     <button class="card" data-task="Şarkıyı parçalara ayır"><div class="big">🎼</div><h3>Şarkıyı parçalara ayır</h3><p>Vokal, davul, bas, eşlik.</p></button>
+     <button class="card" data-task="Vokali azalt"><div class="big">🎤</div><h3>Vokali azalt (karaoke)</h3><p>Hızlı ve basit yöntem.</p></button>
+     <button class="card" data-task="Ses ve müzik karıştır"><div class="big">🎚</div><h3>Ses ve müzik karıştır</h3><p>Videoya müzik ekle.</p></button>
+    </div>
+    <div class="panel">
+     <h3 id="atitle" style="margin-top:0">Gürültüyü azalt</h3>
+     <div class="steps" id="asteps"><span class="on">1 Dosya seç</span><span>2 Ayarla</span><span>3 Kaydet</span></div>
+     <div id="abody">
+      <div class="drop"><div class="big">⬆️</div><h3 style="margin:6px 0">Ses veya video dosyasını bırak</h3><div class="muted">ya da bilgisayardan seç</div><p><button class="btn pri" id="apick">Dosya seç</button></p></div>
+     </div>
+    </div>
+    <div class="side"><div class="tip" id="atip"><b>💡 Bu ne işe yarar?</b>Kayıttaki sürekli arka plan gürültüsünü azaltır. Önce 10 saniyelik örneği dinle, beğenirsen tamamını kaydet.</div></div>
+   </div>
+  </section>
+
+  <section class="screen" id="subs">
+   <h1>Altyazı</h1><p class="lead">Altyazıyı nasıl hazırlamak istersin?</p>
+   <div class="cards">
+    <button class="card"><div class="big">🎙</div><h3>Konuşmayı yazıya çevir</h3><p>Video veya ses seç, program yazsın. Sonra düzeltirsin.</p></button>
+    <button class="card"><div class="big">⌨️</div><h3>Elle yaz</h3><p>Zamanı ve metni kendin gir.</p></button>
+    <button class="card"><div class="big">📄</div><h3>Dosyadan yükle</h3><p>Hazır SRT veya VTT dosyası.</p></button>
+    <button class="card"><div class="big">🎞</div><h3>Videoya yaz</h3><p>Altyazıyı görüntünün üstüne kalıcı yak.</p></button>
+   </div>
+   <div class="tip" style="margin-top:16px"><b>💡 Bilgi</b>Otomatik yazıya çevirme ilk kullanımda küçük bir motor indirir; indirmeden önce sana sorulur.</div>
+  </section>
+
+  <section class="screen" id="cover">
+   <h1>Videoya kapak ekle</h1><p class="lead">Seçtiğin fotoğraf videonun küçük resmi olur. Video yeniden kodlanmaz.</p>
+   <div class="row" style="grid-template-columns:260px 1fr">
+    <div class="side"><button class="btn">🎬 1 · Videoyu seç</button><span class="muted">Tatil.mp4</span><button class="btn">🖼 2 · Fotoğrafı seç</button><span class="muted">kapak.png</span><button class="btn pri">💾 3 · Kapaklı videoyu kaydet</button></div>
+    <div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap"><div style="width:360px;max-width:100%;aspect-ratio:16/9;border-radius:14px;background:linear-gradient(135deg,#3c3489,#ef9f27);display:grid;place-items:center;font-size:22px;font-weight:700">Kapak fotoğrafı</div><div style="width:140px;aspect-ratio:9/16;border-radius:14px;background:linear-gradient(135deg,#3c3489,#ef9f27)"></div></div>
+   </div>
+  </section>
+
+  <section class="screen" id="opts" style="margin-top:34px;display:block">
+   <h2 style="font-size:22px">Tasarım için seçenekler (karar senin)</h2>
+   <div class="cards">
+    <div class="card"><div class="big">🚫</div><h3>A · Tasarım sekmesi olmasın</h3><p>Program yalnız video, ses, altyazı ve kapakla ilgilenir. En sade hâl; kapak için hazır fotoğraf kullanılır.</p></div>
+    <div class="card"><div class="big">✍️</div><h3>B · Yerel "yazıyla tasarla"</h3><p>İnternetsiz, ücretsiz. "Mavi YouTube kapağı, başlık: Yeni Video" yazarsın, program hazır düzenlerden birini kurar. Gerçek yapay zekâ değildir, resim çizmez.</p></div>
+   </div>
+  </section>
+ </main>
+ <footer class="status"><span>🛡 Dosyaların bu bilgisayarda</span><span>❓ Yardım</span><span class="sp" style="flex:1"></span><span>✔ Kaydedildi 14:32</span><span>Sürüm 0.1.7</span></footer>
+</div>
+<div class="ov" id="ov"><div class="modal"><div class="badge" id="tn">1 / 3</div><h2 id="tt" style="margin:10px 0 6px"></h2><p id="tb" class="lead" style="margin:0"></p><div class="dots" id="td"></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" id="tskip">Geç</button><button class="btn pri" id="tnext">İleri</button></div></div></div>
+<script>
+var $=function(s,r){return(r||document).querySelector(s)},$$=function(s,r){return[].slice.call((r||document).querySelectorAll(s))};
+function go(id){$$('.screen').forEach(function(s){if(s.id!=='opts')s.classList.toggle('on',s.id===id)});$$('.rail button').forEach(function(b){b.classList.toggle('on',b.dataset.go===id)});window.scrollTo(0,0);$('main').scrollTop=0}
+$$('[data-go]').forEach(function(b){b.addEventListener('click',function(){go(b.dataset.go)})});
+$('#theme').addEventListener('click',function(){var r=document.documentElement;r.dataset.t=r.dataset.t==='light'?'dark':'light'});
+$$('#vtasks .card').forEach(function(c){c.addEventListener('click',function(){$$('#vtasks .card').forEach(function(x){x.classList.remove('sel')});c.classList.add('sel')})});
+var tips={'Gürültüyü azalt':'Kayıttaki sürekli arka plan gürültüsünü azaltır. Önce 10 saniyelik örneği dinle, beğenirsen tamamını kaydet.','Şarkıyı parçalara ayır':'Şarkıyı vokal, davul, bas ve eşliğe ayırır. Kayıt süresinden uzun sürebilir; pencereyi kapatma.','Vokali azalt':'Ortadaki sesi azaltır. Hızlıdır ama kusursuz değildir; vokal ortada değilse sonuç zayıf olur.','Ses ve müzik karıştır':'Videonun sesine müzik ekler, seviyeleri ayarlarsın. Konuşurken müziği otomatik kısabilirsin.'};
+var task='Gürültüyü azalt';
+function reset(){$('#atitle').textContent=task;$('#atip').innerHTML='<b>💡 Bu ne işe yarar?</b>'+tips[task];$('#asteps').innerHTML='<span class="on">1 Dosya seç</span><span>2 Ayarla</span><span>3 Kaydet</span>';$('#abody').innerHTML='<div class="drop"><div class="big">⬆️</div><h3 style="margin:6px 0">Ses veya video dosyasını bırak</h3><div class="muted">ya da bilgisayardan seç</div><p><button class="btn pri" id="apick">Dosya seç</button></p></div>';bind()}
+function bind(){var p=$('#apick');if(p)p.addEventListener('click',step2)}
+function step2(){$('#asteps').innerHTML='<span class="done">✔ Dosya seçildi</span><span class="on">2 Ayarla</span><span>3 Kaydet</span>';var extra=task==='Şarkıyı parçalara ayır'?'<p>Hangi parçaları kaydedelim?</p><p><label><input type="checkbox" checked> Vokal</label> &nbsp; <label><input type="checkbox" checked> Eşlik (vokalsiz müzik)</label> &nbsp; <label><input type="checkbox"> Davul</label> &nbsp; <label><input type="checkbox"> Bas</label></p>':'<p>Güç: <input type="range" min="0" max="100" value="60"> <span class="muted">Orta</span></p>';$('#abody').innerHTML='<div class="panel" style="background:var(--s3)"><b>Şarkı.mp3</b> <span class="muted">· 3:42</span></div>'+extra+'<p><button class="btn pri" id="ago">'+(task==='Şarkıyı parçalara ayır'?'Ayrıştır':'Uygula ve kaydet')+'</button> <button class="btn" id="aback">Geri</button></p><p class="muted">Tahmini süre bu alanda gösterilecek (gerçek ölçümle).</p>';$('#aback').addEventListener('click',reset);$('#ago').addEventListener('click',run)}
+function run(){$('#asteps').innerHTML='<span class="done">✔ Dosya seçildi</span><span class="done">✔ Ayarlandı</span><span class="on">3 Kaydediliyor…</span>';$('#abody').innerHTML='<b>İşleniyor…</b><div class="bar"><i id="pb"></i></div><div class="muted" id="pt">%0 · bu pencereyi kapatma</div>';var n=0,t=setInterval(function(){n+=4;$('#pb').style.width=n+'%';$('#pt').textContent='%'+n+' · bu pencereyi kapatma';if(n>=100){clearInterval(t);done()}},120)}
+function done(){$('#asteps').innerHTML='<span class="done">✔ Dosya seçildi</span><span class="done">✔ Ayarlandı</span><span class="done">✔ Bitti</span>';var list=task==='Şarkıyı parçalara ayır'?'<div class="stem"><span class="play">▶</span><b>Vokal</b><span class="muted">Şarkı_vokal.wav</span></div><div class="stem"><span class="play">▶</span><b>Eşlik</b><span class="muted">Şarkı_eslik.wav</span></div>':'<div class="stem"><span class="play">▶</span><b>Önce / sonra dinle</b><span class="muted">Şarkı_temiz.wav</span></div>';$('#abody').innerHTML='<h3 style="margin-top:0">✔ Bitti!</h3>'+list+'<p><button class="btn pri">📂 Klasörü aç</button> <button class="btn" id="again">Yeni dosya</button></p>';$('#again').addEventListener('click',reset)}
+$$('#atasks .card').forEach(function(c){c.addEventListener('click',function(){$$('#atasks .card').forEach(function(x){x.classList.remove('sel')});c.classList.add('sel');task=c.dataset.task;reset()})});
+bind();
+var T=[['Ana sayfadan başla','Ne yapmak istediğini seç; program seni doğru bölüme götürür.'],['Soldaki menü','Video, Ses, Altyazı ve Kapak bölümleri arasında geçiş yapar.'],['Her iş 3 adımda','Dosya seç, ayarla, kaydet. Orijinal dosyaların asla değişmez.']];var ti=0;
+function show(){$('#tn').textContent=(ti+1)+' / '+T.length;$('#tt').textContent=T[ti][0];$('#tb').textContent=T[ti][1];$('#td').innerHTML=T.map(function(_,i){return'<i class="'+(i===ti?'on':'')+'"></i>'}).join('');$('#tnext').textContent=ti===T.length-1?'Bitti':'İleri'}
+$('#help').addEventListener('click',function(){ti=0;show();$('#ov').classList.add('on')});
+$('#tnext').addEventListener('click',function(){if(ti===T.length-1)$('#ov').classList.remove('on');else{ti++;show()}});
+$('#tskip').addEventListener('click',function(){$('#ov').classList.remove('on')});
+</script></body></html>

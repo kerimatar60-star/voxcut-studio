@@ -1,7 +1,7 @@
 import type { AudioMixState } from './audioMixModel';
 import type { TimelineState } from './timelineModel';
 
-export type Workspace = 'design' | 'video' | 'audio' | 'subtitles' | 'cover';
+export type Workspace = 'video' | 'audio' | 'subtitles' | 'cover';
 export type AssetKind = 'image' | 'video' | 'audio';
 
 export type MediaAsset = {
